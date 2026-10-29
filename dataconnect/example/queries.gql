@@ -1,0 +1,115 @@
+mutation CreateCourt @auth(level: USER) {
+  court_insert(data: { name: "Court 1", status: "Active" })
+}
+
+mutation UpdateCourt($id: UUID!, $status: String!) @auth(level: USER) {
+  court_update(id: $id, data: { status: $status })
+}
+
+mutation DeleteCourt($id: UUID!) @auth(level: USER) {
+  court_delete(id: $id)
+}
+
+query GetCourt($id: UUID!) @auth(level: PUBLIC, insecureReason: "Publicly visible court status") {
+  court(id: $id) { name status amenities }
+}
+
+query ListCourts @auth(level: PUBLIC, insecureReason: "Publicly visible court list") {
+  courts { name status }
+}
+
+mutation CreateUser @auth(level: USER) {
+  user_insert(data: { id_expr: "auth.uid", email: "user@example.com", role: "Member" })
+}
+
+mutation UpdateUser($membershipStatus: String!) @auth(level: USER) {
+  user_update(key: { id_expr: "auth.uid" }, data: { membershipStatus: $membershipStatus })
+}
+
+mutation DeleteUser @auth(level: USER) {
+  user_delete(key: { id_expr: "auth.uid" })
+}
+
+query GetMyProfile @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) { email role membershipStatus phone }
+}
+
+query ListUsers @auth(level: USER) {
+  users { email role }
+}
+
+mutation CreateBooking($courtId: UUID!, $startTime: Timestamp!, $endTime: Timestamp!) @auth(level: USER) {
+  booking_insert(data: { courtId: $courtId, userId_expr: "auth.uid", startTime: $startTime, endTime: $endTime })
+}
+
+mutation UpdateBooking($id: UUID!, $endTime: Timestamp!) @auth(level: USER) {
+  booking_update(id: $id, data: { endTime: $endTime })
+}
+
+mutation DeleteBooking($id: UUID!) @auth(level: USER) {
+  booking_delete(id: $id)
+}
+
+query GetBooking($id: UUID!) @auth(level: USER) {
+  booking(id: $id) { startTime endTime court { name } }
+}
+
+query ListMyBookings @auth(level: USER) {
+  bookings(where: { userId: { eq_expr: "auth.uid" } }) { startTime endTime court { name } }
+}
+
+mutation CreateOpenPlaySession @auth(level: USER) {
+  openPlaySession_insert(data: { name: "Morning Session", startTime: "2024-10-01T09:00:00Z", maxCapacity: 20 })
+}
+
+mutation UpdateSession($id: UUID!, $currentPlayersCount: Int!) @auth(level: USER) {
+  openPlaySession_update(id: $id, data: { currentPlayersCount: $currentPlayersCount })
+}
+
+mutation DeleteSession($id: UUID!) @auth(level: USER) {
+  openPlaySession_delete(id: $id)
+}
+
+query GetSession($id: UUID!) @auth(level: PUBLIC, insecureReason: "Publicly visible session details") {
+  openPlaySession(id: $id) { name startTime maxCapacity }
+}
+
+query ListSessions @auth(level: PUBLIC, insecureReason: "Publicly visible session list") {
+  openPlaySessions { name startTime }
+}
+
+mutation CreateTransaction($amount: Float!, $description: String!) @auth(level: USER) {
+  transaction_insert(data: { userId_expr: "auth.uid", amount: $amount, itemDescription: $description, timestamp_time: { now: true } })
+}
+
+mutation DeleteTransaction($id: UUID!) @auth(level: USER) {
+  transaction_delete(id: $id)
+}
+
+query GetTransaction($id: UUID!) @auth(level: USER) {
+  transaction(id: $id) { amount itemDescription timestamp }
+}
+
+query ListMyTransactions @auth(level: USER) {
+  transactions(where: { userId: { eq_expr: "auth.uid" } }) { amount itemDescription timestamp }
+}
+
+mutation CreateDisplayQueue($sessionId: UUID!, $playerOrder: [UUID!]) @auth(level: USER) {
+  displayQueue_insert(data: { sessionId: $sessionId, playerOrder: $playerOrder })
+}
+
+mutation UpdateDisplayQueue($id: UUID!, $playerOrder: [UUID!]) @auth(level: USER) {
+  displayQueue_update(id: $id, data: { playerOrder: $playerOrder })
+}
+
+mutation DeleteDisplayQueue($id: UUID!) @auth(level: USER) {
+  displayQueue_delete(id: $id)
+}
+
+query GetDisplayQueue($id: UUID!) @auth(level: PUBLIC, insecureReason: "Publicly visible queue") {
+  displayQueue(id: $id) { playerOrder session { name } }
+}
+
+query ListQueues @auth(level: PUBLIC, insecureReason: "Publicly visible queue list") {
+  displayQueues { id playerOrder }
+}

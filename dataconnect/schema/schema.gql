@@ -1,0 +1,39 @@
+type Court @table {
+  name: String!
+  status: String!
+  amenities: String
+}
+
+type User @table {
+  email: String!
+  role: String!
+  membershipStatus: String
+  phone: String
+}
+
+type Booking @table {
+  court: Court!
+  user: User!
+  startTime: Timestamp!
+  endTime: Timestamp!
+}
+
+type OpenPlaySession @table {
+  name: String!
+  startTime: Timestamp!
+  maxCapacity: Int!
+  currentPlayersCount: Int
+  court: Court
+}
+
+type Transaction @table {
+  user: User!
+  amount: Float!
+  itemDescription: String!
+  timestamp: Timestamp!
+}
+
+type DisplayQueue @table {
+  session: OpenPlaySession!
+  playerOrder: [UUID]
+}

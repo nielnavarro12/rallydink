@@ -1,0 +1,24 @@
+mutation CreateSeedData @transaction {
+  court_insertMany(data: [
+    { name: "Court 1", status: "Available" },
+    { name: "Court 2", status: "Occupied" },
+    { name: "Court 3", status: "Maintenance" }
+  ])
+  user_insertMany(data: [
+    { email: "alice@example.com", role: "Member", membershipStatus: "Active", phone: "555-0101" },
+    { email: "bob@example.com", role: "Member", membershipStatus: "Inactive", phone: "555-0102" },
+    { email: "charlie@example.com", role: "Admin", membershipStatus: "Active", phone: "555-0103" }
+  ])
+  openPlaySession_insertMany(data: [
+    { name: "Morning Match", startTime: "2024-05-20T08:00:00Z", maxCapacity: 10, currentPlayersCount: 2 },
+    { name: "Evening Doubles", startTime: "2024-05-20T18:00:00Z", maxCapacity: 4, currentPlayersCount: 4 }
+  ])
+  booking_insertMany(data: [
+    { court: { id: "00000000-0000-0000-0000-000000000000" }, user: { id: "00000000-0000-0000-0000-000000000000" }, startTime: "2024-05-21T09:00:00Z", endTime: "2024-05-21T10:00:00Z" },
+    { court: { id: "00000000-0000-0000-0000-000000000001" }, user: { id: "00000000-0000-0000-0000-000000000001" }, startTime: "2024-05-21T10:00:00Z", endTime: "2024-05-21T11:00:00Z" }
+  ])
+  transaction_insertMany(data: [
+    { user: { id: "00000000-0000-0000-0000-000000000000" }, amount: 25.00, itemDescription: "Court Rental Fee", timestamp: "2024-05-20T10:00:00Z" },
+    { user: { id: "00000000-0000-0000-0000-000000000001" }, amount: 15.50, itemDescription: "Snacks", timestamp: "2024-05-20T11:00:00Z" }
+  ])
+}

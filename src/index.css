@@ -1,0 +1,102 @@
+/* Candy glass backdrop: soft colour blobs behind frosted panels */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(55vmax 55vmax at 6% 4%, #ffc4e6 0%, transparent 62%),
+    radial-gradient(55vmax 55vmax at 96% 8%, #cbbcff 0%, transparent 62%),
+    radial-gradient(60vmax 60vmax at 88% 96%, #b5e6ff 0%, transparent 62%),
+    radial-gradient(50vmax 50vmax at 4% 92%, #bff7e0 0%, transparent 62%),
+    radial-gradient(40vmax 40vmax at 50% 50%, #fff3b8 0%, transparent 70%),
+    #fdf3ff;
+  background-attachment: fixed;
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background:
+      radial-gradient(55vmax 55vmax at 6% 4%, #7a2c8f 0%, transparent 62%),
+      radial-gradient(55vmax 55vmax at 96% 8%, #3b3fb8 0%, transparent 62%),
+      radial-gradient(60vmax 60vmax at 88% 96%, #0f6fa8 0%, transparent 62%),
+      radial-gradient(50vmax 50vmax at 4% 92%, #0f7a69 0%, transparent 62%),
+      #1a1040;
+    background-attachment: fixed;
+  }
+}
+/* Target all inputs, selects, and textareas */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  /* Increase dimensions & typography */
+  padding: 12px 16px;
+  font-size: 1rem; /* 16px prevents mobile auto-zoom */
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* Reduce border radius */
+  border-radius: 4px; /* Reduced from default rounder corners */
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Ensure dropdown options have solid contrast & background */
+select option {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+/* Focus state for enhanced accessibility */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* 1. Target inputs and selects to increase size and lessen border-radius */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+select {
+  padding: 12px 16px;          /* Bigger touch target / taller field */
+  font-size: 1rem;              /* 16px font size */
+  border-radius: 6px;           /* Lessened border-radius (default was likely 12px+) */
+  border: 1px solid #4a6fa5;
+  background-color: #0d1b2a;
+  color: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 2. Fix dropdown options visibility */
+select option {
+  background-color: #1b263b;    /* Solid dark background matching app theme */
+  color: #ffffff !important;    /* Forces text to be visible white on all options */
+  padding: 12px;
+}
+
+/* 3. Highlighted / Selected option state styling */
+select option:hover,
+select option:focus,
+select option:active,
+select option:checked {
+  background-color: #2b4c7e !important;
+  color: #ffffff !important;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0; /* Prevents image from shrinking */
+}
