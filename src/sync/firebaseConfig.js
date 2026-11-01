@@ -6,15 +6,16 @@ import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDnlA_7MvMdAnFMJkcrC1rlSEEEkn43c5o",
-  authDomain: "rallydink-8bd5d.firebaseapp.com",
-  projectId: "rallydink-8bd5d",
-  storageBucket: "rallydink-8bd5d.firebasestorage.app",
-  messagingSenderId: "147228865456",
-  appId: "1:147228865456:web:fd0519b73232777d429c75",
-  measurementId: "G-7YZP38Y1VH"
+export const firebaseConfig = {
+  apiKey: "AIzaSyCkylz_F-rBewflkwY5kKEHV-o_10kfhg8",
+  authDomain: "drivendink.firebaseapp.com",
+  projectId: "drivendink",
+  storageBucket: "drivendink.firebasestorage.app",
+  messagingSenderId: "145012106025",
+  appId: "1:145012106025:web:213a3bb4fba755fef9cd38",
+  measurementId: "G-2PBMYRD69W"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

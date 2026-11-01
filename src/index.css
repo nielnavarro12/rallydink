@@ -32,7 +32,7 @@ textarea {
   /* Increase dimensions & typography */
   padding: 12px 16px;
   font-size: 1rem; /* 16px prevents mobile auto-zoom */
-  line-height: 1.5;
+  line-height: 1;
   width: 100%;
   box-sizing: border-box;
 
@@ -41,8 +41,10 @@ textarea {
   border: 1px solid #ccc;
   background-color: #ffffff;
   color: #1a1a1a;
-  
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 /* Ensure dropdown options have solid contrast & background */
@@ -67,9 +69,9 @@ input[type="text"],
 input[type="number"],
 input[type="email"],
 select {
-  padding: 12px 16px;          /* Bigger touch target / taller field */
-  font-size: 1rem;              /* 16px font size */
-  border-radius: 6px;           /* Lessened border-radius (default was likely 12px+) */
+  padding: 12px 16px; /* Bigger touch target / taller field */
+  font-size: 1rem; /* 16px font size */
+  border-radius: 6px; /* Lessened border-radius (default was likely 12px+) */
   border: 1px solid #4a6fa5;
   background-color: #0d1b2a;
   color: #ffffff;
@@ -79,8 +81,8 @@ select {
 
 /* 2. Fix dropdown options visibility */
 select option {
-  background-color: #1b263b;    /* Solid dark background matching app theme */
-  color: #ffffff !important;    /* Forces text to be visible white on all options */
+  background-color: #1b263b; /* Solid dark background matching app theme */
+  color: #ffffff !important; /* Forces text to be visible white on all options */
   padding: 12px;
 }
 
@@ -99,4 +101,132 @@ select option:checked {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0; /* Prevents image from shrinking */
+}
+.banner {
+  height: 150px;
+  max-width: 390px;
+  object-fit: fit;
+  flex-shrink: 0; /* Prevents image from shrinking */
+}
+/* Container override */
+.cq.auth-wrapper {
+  max-width: 100% !important; /* Overrides default .cq 960px width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  padding: 20px 16px;
+}
+
+/* Card width constraint */
+.auth-card {
+  width: 100%;
+  max-width: 435px; /* Reduced from 420px for a more compact form */
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 24px 20px; /* Slightly tighter padding */
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Tab button size adjustment to fit tighter card */
+.auth-tab-btn {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.auth-title {
+  text-transform: uppercase;
+  font-weight: bold; /* Makes the text bold */
+  font-size: 24px;
+  letter-spacing: 1px; /* Adds a little space between the uppercase letters */
+}
+.auth-subtitle {
+  font-size: 14px; /* Slightly smaller subtitle text */
+  color: var(--text);
+  margin-bottom: 20px; /* Reduced spacing below subtitle */
+}
+.auth-field label {
+  font-size: 14px; /* Slightly smaller label text */
+  margin-bottom: 4px; /* Reduced spacing below label */
+  display: block;
+  color: var(--text);
+}
+.auth-field input {
+  padding: 10px 14px; /* Slightly smaller padding */
+  font-size: 14px; /* Slightly smaller input text */
+  border-radius: 6px; /* Slightly less rounded corners */
+  border: 1px solid var(--bd);
+  background-color: var(--bg);
+  color: var(--text);
+  width: 100%;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.auth-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+.auth-submit-btn {
+  padding: 10px 16px; /* Slightly smaller button padding */
+  font-size: 14px; /* Slightly smaller button text */
+  border-radius: 6px; /* Slightly less rounded corners */
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+.auth-submit-btn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+.auth-submit-btn:active {
+  transform: translateY(0);
+}
+.auth-submit-btn:disabled {
+  background-color: var(--primary-disabled);
+  cursor: not-allowed;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0; /* Adjusted spacing */
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--bd);
+}
+.auth-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px; /* Slightly smaller button padding */
+  font-size: 14px; /* Slightly smaller button text */
+  border-radius: 6px; /* Slightly less rounded corners */
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid var(--bd);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+  padding: 10px 16px; /* Slightly smaller button padding */
+  font-size: 14px; /* Slightly smaller button text */
+  border-radius: 6px; /* Slightly less rounded corners */
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }

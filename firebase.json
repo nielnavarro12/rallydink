@@ -1,11 +1,12 @@
 {
   "firestore": {
+    "database": "(default)",
+    "location": "asia-east2",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "site": "rallydink-courtpos",
-    "public": "public",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,6 +20,12 @@
     ]
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "rules_version = '2';"
+  },
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
+  },
+  "auth": {
+    "providers": {}
   }
 }

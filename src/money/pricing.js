@@ -26,4 +26,4 @@ export function rentalPrice(b, st) {
 // open play fee per player: the session's own fee, or the default
 export const sessionFee = (se, st) => (se && se.fee != null && se.fee !== '' ? Number(se.fee) : Number(st.openPlayFee));
 
-export const METHODS = ['Cash', 'GCash', 'Card', 'Bank transfer', 'Other'];
+export const METHODS = ['Cash', 'GCash', ];//'Card', 'Bank transfer', 'Other'];

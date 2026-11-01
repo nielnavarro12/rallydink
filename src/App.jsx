@@ -29,11 +29,61 @@ function HubRoute() {
   return <HubProvider key={hubId}><Outlet /></HubProvider>;
 }
 
+//export default function App() {
+  // return (
+  //   <Routes>
+  //     <Route path="/" element={<Home />} />
+  //     <Route path="/login" element={<LoginPage />} />
+
+  //     {/* platform console: super admins only */}
+  //     <Route path="/platform" element={<RequireSuper><PlatformLayout /></RequireSuper>}>
+  //       <Route index element={<HubsPage />} />
+  //       <Route path="hubs/:id" element={<HubDetail />} />
+  //       <Route path="admins" element={<SuperAdminsPage />} />
+  //     </Route>
+
+  //     {/* one hub (venue): /h/<code>/... */}
+  //     <Route path="/h/:hubId" element={<HubRoute />}>
+  //       <Route path="login" element={<LoginPage />} />
+  //       <Route path="tv" element={<TvPage />} />
+
+  //       {/* staff area */}
+  //       <Route element={<RequireAuth admin><Layout /></RequireAuth>}>
+  //         <Route index element={<Dashboard />} />
+  //         <Route path="queue" element={<RequirePerm perm="queue"><ControlPage /></RequirePerm>} />
+  //         <Route path="rentals" element={<RequirePerm perm="bookings"><RentalsPage /></RequirePerm>} />
+  //         <Route path="open-play" element={<RequirePerm perm="bookings"><OpenPlayPage /></RequirePerm>} />
+  //         <Route path="players" element={<RequirePerm perm="players"><PlayersPage /></RequirePerm>} />
+  //         <Route path="pos" element={<RequirePerm perm="pos"><PosPage /></RequirePerm>} />
+  //         <Route path="inventory" element={<RequirePerm perm="inventory"><InventoryPage /></RequirePerm>} />
+  //         <Route path="income" element={<RequirePerm perm="income"><IncomePage /></RequirePerm>} />
+  //         <Route path="stats" element={<RequirePerm perm="queue"><StatsPage /></RequirePerm>} />
+  //         <Route path="ads" element={<RequirePerm perm="tv"><AdsPage /></RequirePerm>} />
+  //         <Route path="users" element={<RequirePerm perm="staff"><UsersPage /></RequirePerm>} />
+  //         <Route path="account" element={<AccountPage />} />
+  //       </Route>
+
+  //       {/* client page: any signed-in user */}
+  //       <Route path="c" element={<RequireAuth><ClientLayout /></RequireAuth>}>
+  //         <Route index element={<ClientBook />} />
+  //         <Route path="open-play" element={<ClientOpenPlay />} />
+  //         <Route path="profile" element={<ClientProfile />} />
+  //       </Route>
+
+  //       <Route path="*" element={<Navigate to=".." replace />} />
+  //     </Route>
+
+  //     <Route path="*" element={<Navigate to="/" replace />} />
+  //   </Routes>
+  
+ // );
+//}
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<LoginPage />} />
+      {/* Root path now loads the Login page directly */}
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
 
       {/* platform console: super admins only */}
       <Route path="/platform" element={<RequireSuper><PlatformLayout /></RequireSuper>}>
@@ -63,13 +113,23 @@ export default function App() {
           <Route path="account" element={<AccountPage />} />
         </Route>
 
-        {/* client page: any signed-in user */}
+{/* client page: anyone can view, actions require login */}
+<Route path="c" element={<ClientLayout />}>
+  <Route index element={<ClientBook />} />
+  <Route path="open-play" element={<ClientOpenPlay />} />
+  
+  {/* Profile still requires authentication */}
+  <Route path="profile" element={
+    <RequireAuth><ClientProfile /></RequireAuth>
+  } />
+</Route>
+        {/* client page: any signed-in user 
         <Route path="c" element={<RequireAuth><ClientLayout /></RequireAuth>}>
           <Route index element={<ClientBook />} />
           <Route path="open-play" element={<ClientOpenPlay />} />
           <Route path="profile" element={<ClientProfile />} />
         </Route>
-
+*/}
         <Route path="*" element={<Navigate to=".." replace />} />
       </Route>
 

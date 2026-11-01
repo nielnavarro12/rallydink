@@ -32,7 +32,6 @@ export default function RentalsPage() {
     const r = await cancelBooking(b);
     if (!r.ok) setErr(r.error);
   };
-
   return (
     <div className="cq">
       <div className="cq-head"><h1>Court rentals</h1></div>
@@ -43,6 +42,7 @@ export default function RentalsPage() {
           courts={s.courts.map((c) => c.n)}
           rentals={s.bookings}
           blocks={openPlayBlocks(s.schedule.filter(isUpcoming), s.courts.map((c) => c.n))}
+          defaultName={'Renter'} 
           nameLabel="Renter name (shown on the TV)"
           quote={(a, e) => `${money(rentalPrice({ start: a, end: e }, st))}`}
           onBook={(b) => bookCourt(user, b, { admin: true })}

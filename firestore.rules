@@ -1,0 +1,190 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────
+    // Helpers: identity
+    // ─────────────────────────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+
+    function isSuper() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helpers: hub state + staff roles (super admin counts as owner everywhere)
+    // ─────────────────────────────────────────────────────────────
+    function hubOn(h) {
+      return get(/databases/$(database)/documents/hubs/$(h)).data.get('active', true);
+    }
+
+    function isStaff(h) {
+      return isSuper()
+        || (signedIn() && hubOn(h)
+            && exists(/databases/$(database)/documents/hubs/$(h)/admins/$(request.auth.uid)));
+    }
+
+    function roleOf(h) {
+      return isSuper()
+        ? 'owner'
+        : get(/databases/$(database)/documents/hubs/$(h)/admins/$(request.auth.uid)).data.get('role', 'owner');
+    }
+
+    function hasRole(h, roles) { return isStaff(h) && roleOf(h) in roles; }
+
+    // Role tiers (each tier includes the ones above it)
+    function isOwner(h)    { return hasRole(h, ['owner', 'admin']); }
+    function canManage(h)  { return hasRole(h, ['owner', 'admin', 'manager']); }
+    function canFront(h)   { return hasRole(h, ['owner', 'admin', 'manager', 'frontdesk']); }
+    function canPos(h)     { return hasRole(h, ['owner', 'admin', 'manager', 'frontdesk', 'cashier']); }
+    function canQueue(h)   { return hasRole(h, ['owner', 'admin', 'manager', 'frontdesk', 'queue']); }
+    function canDisplay(h) { return hasRole(h, ['owner', 'admin', 'manager', 'frontdesk', 'queue', 'tv']); }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helpers: player-facing access (signed in + hub active)
+    // ─────────────────────────────────────────────────────────────
+    function open(h) { return signedIn() && hubOn(h); }
+
+    // Existing doc belongs to the caller
+    function ownsExisting(h) { return open(h) && resource.data.uid == request.auth.uid; }
+    // Doc being written belongs to the caller
+    function ownsNew(h) { return open(h) && request.resource.data.uid == request.auth.uid; }
+
+    // ═════════════════════════════════════════════════════════════
+    // Platform level
+    // ═════════════════════════════════════════════════════════════
+    match /platformAdmins/{uid} {
+      allow get: if isSelf(uid);
+      allow list, write: if isSuper();
+    }
+
+    match /users/{uid} {
+      allow read: if isSuper() || isSelf(uid);
+      allow create, update: if isSuper()
+        || (isSelf(uid)
+            && request.resource.data.email.lower() == request.auth.token.email.lower());
+      allow delete: if isSuper();
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // Hub level
+    // ═════════════════════════════════════════════════════════════
+    match /hubs/{hubId} {
+      allow get: if true;
+      allow list: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isOwner(hubId);
+
+      // ── Staff ──────────────────────────────────────────────
+      match /admins/{uid} {
+        allow get: if isSelf(uid) || isOwner(hubId);
+        allow list: if isOwner(hubId);
+
+        // Owners manage staff. A user may only add themselves as the first
+        // owner of a hub that is being created in the SAME batch/transaction.
+        allow create: if isOwner(hubId)
+          || (isSelf(uid)
+              && !exists(/databases/$(database)/documents/hubs/$(hubId))
+              && existsAfter(/databases/$(database)/documents/hubs/$(hubId)));
+        allow update, delete: if isOwner(hubId);
+      }
+
+      // ── Players ────────────────────────────────────────────
+      match /players/{id} {
+        allow read: if isStaff(hubId) || (open(hubId) && isSelf(id));
+
+        allow create: if canQueue(hubId)
+          || (open(hubId) && isSelf(id)
+              && request.resource.data.uid == request.auth.uid
+              && request.resource.data.keys().hasOnly(
+                   ['uid', 'name', 'email', 'phone', 'selfLevel', 'createdAt', 'updatedAt']));
+
+        allow update: if canQueue(hubId)
+          || (open(hubId) && isSelf(id)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+                   ['name', 'phone', 'selfLevel', 'email', 'createdAt', 'updatedAt']));
+
+        allow delete: if canFront(hubId);
+      }
+
+      // ── Bookings, slots, public rentals ────────────────────
+      match /bookings/{id} {
+        allow read: if canPos(hubId) || ownsExisting(hubId);
+        allow create: if ownsNew(hubId);
+        allow update: if canPos(hubId);
+        allow delete: if canPos(hubId) || ownsExisting(hubId);
+      }
+
+      match /slots/{slot} {
+        allow get: if open(hubId);
+        allow create: if ownsNew(hubId);
+        allow delete: if canPos(hubId) || ownsExisting(hubId);
+      }
+
+      match /rentalsPublic/{id} {
+        allow read: if true;
+        allow create: if ownsNew(hubId);
+        allow update: if canPos(hubId);
+        allow delete: if canPos(hubId) || ownsExisting(hubId);
+      }
+
+      match /rentals/{id} {
+        allow read: if open(hubId);
+        allow create, update: if canQueue(hubId);
+        allow delete: if canFront(hubId);
+      }
+
+      // ── Open play sessions & signups ───────────────────────
+      match /sessions/{id} {
+        allow read: if true;
+        allow create, update: if canQueue(hubId);
+        allow delete: if canFront(hubId);
+      }
+
+      match /signups/{id} {
+        allow read: if open(hubId);
+        allow create, update: if canFront(hubId)
+          || (ownsNew(hubId)
+              && id == request.resource.data.sessionId + '_' + request.auth.uid);
+        allow delete: if canFront(hubId) || ownsExisting(hubId);
+      }
+
+      // ── Live TV queue state ────────────────────────────────
+      match /display/{doc} {
+        allow read: if true;
+        allow write: if canDisplay(hubId)
+          && request.resource.data.json is string
+          && request.resource.data.json.size() < 900000;
+      }
+
+      // ── Venue rates & settings ─────────────────────────────
+      match /settings/{doc} {
+        allow read: if true;
+        allow write: if canManage(hubId);
+      }
+
+      // ── Products & POS ─────────────────────────────────────
+      match /products/{id} {
+        allow read: if canPos(hubId);
+        allow create, delete: if canManage(hubId);
+        allow update: if canManage(hubId)
+          || (canPos(hubId)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'updatedAt']));
+      }
+
+      match /stockLog/{id} {
+        allow read: if canManage(hubId);
+        allow create: if canPos(hubId);
+      }
+
+      match /sales/{id} {
+        allow read, create: if canPos(hubId);
+        allow update: if canManage(hubId);
+      }
+    }
+
+    // Everything else is denied by default; no catch-all rule needed.
+  }
+}

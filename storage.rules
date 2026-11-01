@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Allow reading media files publicly or for signed-in users
+    match /hubs/{hubId}/ads/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && (
+        request.resource == null || request.resource.size < 50 * 1024 * 1024 // 50MB max file size
+      );
+    }
+
+     match /hubs/{hubId}/images/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && (
+        request.resource == null || request.resource.size < 50 * 1024 * 1024 // 50MB max file size
+      );
+    }
+  }
+}

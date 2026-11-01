@@ -440,8 +440,8 @@ const AUTO_CALL_DELAY = 8500; // let the congratulations screen finish first
    A court is rented right now when one of its bookings covers the current time.
    Courts without an active booking are open play courts and are used by the queue.
    ===================================================================== */
-export const OPEN_MIN = 6 * 60; // first bookable time (06:00)
-export const CLOSE_MIN = 22 * 60; // last possible end time (22:00)
+export const OPEN_MIN = 1 * 60; // first bookable time (06:00)
+export const CLOSE_MIN = 25* 60; // last possible end time (22:00)
 export const SLOT = 30; // minutes per booking slot
 export const toMin = (t) => {
   const [h, m] = t.split(":").map(Number);
@@ -594,6 +594,7 @@ const spokenText = (ev) =>
 /* =====================================================================
    TV page: route it at e.g. /queue/tv
    ===================================================================== */
+
 /* =====================================================================
    Open play schedule
    ===================================================================== */
@@ -626,8 +627,8 @@ export const fmtTime = (hhmm) => {
     minute: "2-digit",
   });
 };
-export const LEVELS = ["All levels", "Beginner", "Intermediate", "Advanced"];
-
+export const LEVELS = ["All levels", "Beginner","Low Intermediate", "Intermediate", "High Intermediate", "Advanced"];
+export const SPORTS = ["Pickleball", "Badminton"];
 function ScheduleView({ sessions }) {
   const days = [];
   sessions.slice(0, 10).forEach((x) => {
