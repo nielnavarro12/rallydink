@@ -696,3 +696,32 @@ html[data-cq-theme="dark-glass"] .court-kitchen {
     background: rgba(0, 0, 0, 0.15);
   }
 }
+/* Container to center the spinner perfectly */
+.ad-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #000; /* Deep black background for TV */
+  color: #ccc;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+
+/* The spinning circle */
+.ad-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #fff; /* Solid white top for the spin effect */
+  animation: ad-spin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+/* The keyframes that make it rotate */
+@keyframes ad-spin {
+  to { transform: rotate(360deg); }
+}

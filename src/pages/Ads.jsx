@@ -4,11 +4,14 @@ import { useCourtStore } from "../court-queue/CourtQueue.jsx";
 import { detectAdType } from "../court-queue/TvAds.jsx";
 import VoicePicker from "../components/VoicePicker.jsx";
 import { useSpeech } from "../speech/useSpeech.js";
+import { uploadHubMedia } from "../data/storage.js";
 
+import { useAuth } from "../data/hooks.js"; 
 const TYPE_LABEL = { video: "Video", youtube: "YouTube", image: "Image" };
 
 export default function AdsPage() {
   const hh = useHubHref();
+  const { hub } = useAuth();
   const [s, update] = useCourtStore();
   const set = (patch) => update((x) => ({ ...x, ...patch }));
   const setSpeech = (patch) =>
@@ -20,6 +23,9 @@ export default function AdsPage() {
   const [seconds, setSeconds] = useState(15);
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  const [msg, setMsg] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const ads = s.ads || [];
   const notes = s.announcements || [];
@@ -51,34 +57,56 @@ export default function AdsPage() {
   };
 
   // Handles direct local video/image file uploads per Hub
-  const handleFileUpload = (e) => {
+  // const handleFileUpload = (e) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   setUploading(true);
+  //   const reader = new FileReader();
+
+  //   reader.onload = (event) => {
+  //     const fileDataUrl = event.target.result;
+  //     const fileType = file.type.startsWith("video/")
+  //       ? "video"
+  //       : file.type.startsWith("image/")
+  //       ? "image"
+  //       : detectAdType(file.name);
+
+  //     addAd(fileDataUrl, file.name, fileType);
+  //     setUploading(false);
+  //     e.target.value = ""; // reset file input
+  //   };
+
+  //   reader.onerror = () => {
+  //     alert("Failed to read file.");
+  //     setUploading(false);
+  //   };
+
+  //   reader.readAsDataURL(file);
+  // };
+const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !hub?.id) return;
 
     setUploading(true);
-    const reader = new FileReader();
+    setUploadProgress(0);
+    setMsg("Uploading media...");
 
-    reader.onload = (event) => {
-      const fileDataUrl = event.target.result;
-      const fileType = file.type.startsWith("video/")
-        ? "video"
-        : file.type.startsWith("image/")
-        ? "image"
-        : detectAdType(file.name);
+    try {
+      const downloadUrl = await uploadHubMedia(file, hub.id, (pct) => {
+        setUploadProgress(pct);
+        setMsg(`Uploading media... ${pct}%`);
+      });
 
-      addAd(fileDataUrl, file.name, fileType);
+      setUrl(downloadUrl);
+      setMsg('media uploaded! You can now add it to the ad playlist.');
+    } catch (err) {
+      console.error("Storage upload error:", err);
+      setMsg("Failed to upload media file.");
+    } finally {
       setUploading(false);
-      e.target.value = ""; // reset file input
-    };
-
-    reader.onerror = () => {
-      alert("Failed to read file.");
-      setUploading(false);
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
-
   const moveAd = (i) =>
     update((x) => {
       const a = [...x.ads];
@@ -104,8 +132,7 @@ export default function AdsPage() {
           Open TV display
         </a>
       </div>
-
-      <div className="cq-card">
+<div className="cq-card">
         <h2>TV layout</h2>
         <div className="cq-row">
           <input
@@ -127,6 +154,14 @@ export default function AdsPage() {
           <label className="cq-check">
             <input
               type="checkbox"
+              checked={s.courtsOn !== false}
+              onChange={(e) => set({ courtsOn: e.target.checked })}
+            />{" "}
+            Show courts panel (right)
+          </label>
+          <label className="cq-check">
+            <input
+              type="checkbox"
               checked={!!s.adFill}
               onChange={(e) => set({ adFill: e.target.checked })}
             />{" "}
@@ -140,6 +175,7 @@ export default function AdsPage() {
             />{" "}
             Play ad sound
           </label>
+          
           <select
             value={s.adsPct || 30}
             onChange={(e) => set({ adsPct: +e.target.value })}
@@ -152,6 +188,7 @@ export default function AdsPage() {
             <option value={40}>Panel width: 40%</option>
             <option value={45}>Panel width: 45%</option>
             <option value={50}>Panel width: 50%</option>
+            <option value={100}>Panel width: 100%</option>
           </select>
 
           <select

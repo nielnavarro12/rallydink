@@ -15,7 +15,6 @@ import { levelNum, playerLevel } from "../data/levels.js";
 import { useHubHref } from "../hub/links.jsx";
 import { useHub } from "../hub/HubProvider.jsx";
 import "./courtQueue.css";
-
 /* =====================================================================
    State + sync
    The control page writes; the TV page listens. Sync uses localStorage +
@@ -660,166 +659,6 @@ function ScheduleView({ sessions }) {
   );
 }
 
-/* =====================================================================
-   TV page: route it at e.g. /tv
-   ===================================================================== */
-// export function TvPage() {
-//   const [s, , sync] = useCourtStore({ readOnly: true });
-//   useClockTick();
-//   const { speak, unlock, isSpeaking } = useSpeech(s.speech);
-//   const [started, setStarted] = useState(false);
-//   const [ev, setEv] = useState(null);
-//   const [view, setView] = useState("courts"); // courts | schedule | stats
-//   const upcoming = upcomingSessions(s.schedule || []);
-//   const showSchedule = s.rotate && upcoming.length > 0;
-//   const showStats = s.showStats !== false && hasStats(s.stats);
-//   // The right side cycles: courts -> open play schedule -> player stats
-//   const order = [
-//     "courts",
-//     ...(showSchedule ? ["schedule"] : []),
-//     ...(showStats ? ["stats"] : []),
-//   ];
-//   const orderKey = order.join();
-//   const shown = order.includes(view) ? view : "courts";
-
-//   useEffect(() => {
-//     if (order.length < 2) {
-//       setView("courts");
-//       return undefined;
-//     }
-//     const t = setTimeout(
-//       () => setView((v) => order[(order.indexOf(v) + 1) % order.length]),
-//       VIEW_MS[shown] ?? 12000,
-//     );
-//     return () => clearTimeout(t);
-//   }, [shown, orderKey]); // eslint-disable-line react-hooks/exhaustive-deps
-//   const startedRef = useRef(false);
-//   const lastId = useRef(s.ev?.id); // ignore the announcement that existed on load
-//   const seeded = useRef(false);
-
-//   useEffect(() => {
-//     if (sync.status === "connecting") return; // wait for the first snapshot so an old announcement is not replayed
-//     if (!seeded.current) {
-//       seeded.current = true;
-//       lastId.current = s.ev?.id;
-//       return;
-//     }
-//     const e = s.ev;
-//     if (!e || e.id === lastId.current) return;
-//     lastId.current = e.id;
-//     if (e.type === "say") {
-//       // a voice test sent from the control page: speak only, no overlay
-//       if (startedRef.current) speak(e.text);
-//       return;
-//     }
-//     setEv(e);
-//     setTimeout(
-//       () => setEv((cur) => (cur?.id === e.id ? null : cur)),
-//       e.type === "call" ? 9000 : 8000,
-//     );
-//     if (s.voice && startedRef.current) speak(spokenText(e)); // queued; the ads are lowered while it speaks
-//   }, [s.ev?.id, sync.status]); // eslint-disable-line react-hooks/exhaustive-deps
-
-//   const start = () => {
-//     startedRef.current = true;
-//     setStarted(true);
-//     document.documentElement.requestFullscreen?.().catch(() => {});
-//     unlock(); // browsers allow speech only after a tap
-//   };
-
-//   // TV layout: header / [ads panel | courts] / scrolling announcements
-//   const showAds = s.adsOn !== false && (s.ads || []).length > 0;
-//   const adsPct = s.adsPct || 30;
-//   const hasTicker = (s.announcements || []).length > 0;
-//   const ups = units(s); // waiting players; fixed partners show together
-//   const hubDoc = useHub().doc; // the venue name is the TV title unless one is set on TV & ads
-//   const mainW = 100 - 4 - (showAds ? adsPct + 2 : 0); // vw left for the courts
-//   // Vertical courts: one row up to 5 courts (4 with the ads panel), two rows beyond; sized to always fit
-//   const n = s.courts.length;
-//   const rows = n > (showAds ? 4 : 5) ? 2 : 1;
-//   const perRow = Math.ceil(n / rows);
-//   const maxH = (rows === 2 ? 24 : 50) + (hasTicker ? 0 : 6);
-//   const courtH = `min(${maxH}vh, calc((${mainW}vw - ${perRow * 3.4}vh - ${(perRow - 1) * 2}vw) / ${perRow} * 2.2))`;
-//   const clock = new Date().toLocaleTimeString([], {
-//     hour: "numeric",
-//     minute: "2-digit",
-//   });
-//   return (
-//     <div className="tv">
-//       {!started && (
-//         <button className="tv-start" onClick={start}>
-//           ▶ Tap to start TV display
-//         </button>
-//       )}
-//       <header className="tv-head">
-//         <b>🏸 {(s.club || (hubDoc && hubDoc.name) || s.sport).toUpperCase()}</b>
-//         <span>
-//           {s.club ? `${s.sport} · ` : ""}
-//           {clock} · {s.q.length} {s.q.length === 1 ? "player" : "players"}{" "}
-//           waiting{sync.status === "error" ? " · ⚠ sync lost" : ""}
-//         </span>
-//       </header>
-//       <div className="tv-body">
-//         {showAds && (
-//           <aside className="tv-ads" style={{ width: `${adsPct}vw` }}>
-//             <AdPanel
-//               ads={s.ads}
-//               sound={!!s.adSound && started}
-//               fill={!!s.adFill}
-//               volume={
-//                 isSpeaking && s.speech?.duck !== false
-//                   ? (s.speech?.duckLevel ?? 0.15)
-//                   : 1
-//               }
-//             />
-//           </aside>
-//         )}
-//         <main className="tv-main">
-//           {shown === "schedule" ? (
-//             <ScheduleView sessions={upcoming} />
-//           ) : shown === "stats" ? (
-//             <StatsView stats={s.stats} pairs={s.pairs} />
-//           ) : (
-//             <>
-//               <div className="tv-grid" style={{ "--ch": courtH }}>
-//                 {s.courts.map((c) => (
-//                   <PickleballCourt
-//                     key={c.n}
-//                     court={c}
-//                     rental={activeBooking(s, c.n)}
-//                     next={nextBooking(s, c.n)}
-//                     limit={s.gameMinutes || 0}
-//                   />
-//                 ))}
-//               </div>
-//               <div className="tv-next">
-//                 <b>Up next:</b>{" "}
-//                 {ups.length
-//                   ? ups.slice(0, 12).map((u, i) => {
-//                       const w = fmtWaitShort(
-//                         Math.min(...u.idx.map((k) => s.q[k].at ?? Infinity)),
-//                       );
-//                       return (
-//                         <span key={i}>
-//                           {i + 1}. {u.idx.map((k) => s.q[k].n).join(" & ")}
-//                           {w ? ` · ${w}` : ""}
-//                         </span>
-//                       );
-//                     })
-//                   : "—"}
-//                 {ups.length > 12 && <span>+{ups.length - 12} more</span>}
-//               </div>
-//             </>
-//           )}
-//         </main>
-//       </div>
-//       {hasTicker && (
-//         <Ticker items={s.announcements} speed={s.tickerSpeed || 12} />
-//       )}
-//       {ev && <Announcement ev={ev} sport={s.sport} />}
-//     </div>
-//   );
-// }
 export function TvPage() {
   const [s, , sync] = useCourtStore({ readOnly: true });
   const { hub } = useAuth(); // Access current hub document
@@ -873,7 +712,7 @@ export function TvPage() {
     document.documentElement.requestFullscreen?.().catch(() => {});
     unlock();
   };
-
+const showCourt = s.courtsOn !== false;
   const showAds = s.adsOn !== false && (s.ads || []).length > 0;
   const adsPct = s.adsPct || 30;
   const hasTicker = (s.announcements || []).length > 0;
@@ -906,11 +745,17 @@ export function TvPage() {
           )}
           {(s.club || hub?.name || s.sport).toUpperCase()}
         </b>
+              {showCourt ? (
         <span>
           {s.club ? `${s.sport} · ` : ''}
           {clock} · {s.q.length} {s.q.length === 1 ? 'player' : 'players'} waiting
           {sync.status === 'error' ? ' · ⚠ sync lost' : ''}
         </span>
+              ): (
+        <span>
+          {clock} 
+        </span>
+              )}
       </header>
       <div className="tv-body">
         {showAds && (
@@ -923,12 +768,14 @@ export function TvPage() {
             />
           </aside>
         )}
+              {showCourt && (
         <main className="tv-main">
           {shown === 'schedule' ? (
             <ScheduleView sessions={upcoming} />
           ) : shown === 'stats' ? (
             <StatsView stats={s.stats} pairs={s.pairs} />
           ) : (
+            
             <>
               <div className="tv-grid" style={{ '--ch': courtH }}>
                 {s.courts.map((c) => (
@@ -959,6 +806,7 @@ export function TvPage() {
             </>
           )}
         </main>
+              )}
       </div>
       {hasTicker && <Ticker items={s.announcements} speed={s.tickerSpeed || 12} />}
       {ev && <Announcement ev={ev} sport={s.sport} />}

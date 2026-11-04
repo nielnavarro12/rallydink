@@ -2,9 +2,36 @@ import { data } from '../data/index.js';
 
 /* Platform console: creating hubs (venues), their themes and owners. Only super admins can do any of this. */
 export const THEMES = {
-  candy: { label: 'Candy', desc: 'Pastel candy colours on frosted glass panels', swatch: 'linear-gradient(135deg,#ff9ccf,#c9b8ff 55%,#9fdcff)' },
-  glass: { label: 'Glass', desc: 'Cool frosted glass on a deep blue backdrop', swatch: 'linear-gradient(135deg,#3b82f6,#8b5cf6 55%,#06b6d4)' },
-  professional: { label: 'Professional', desc: 'Clean, solid and neutral, like business software', swatch: 'linear-gradient(135deg,#0f172a,#2563eb 55%,#e2e8f0)' },
+  candy: { 
+    label: 'Candy', 
+    desc: 'Pastel candy colours on frosted glass panels', 
+    swatch: 'linear-gradient(135deg,#ff9ccf,#c9b8ff 55%,#9fdcff)' 
+  },
+  glass: { 
+    label: 'Glass', 
+    desc: 'Cool frosted glass on a deep blue backdrop', 
+    swatch: 'linear-gradient(135deg,#3b82f6,#8b5cf6 55%,#06b6d4)' 
+  },
+  'dark-glass': { 
+    label: 'Dark Glass', 
+    desc: 'Sleek dark frosted panels with vibrant neon blue and purple accents', 
+    swatch: 'linear-gradient(135deg,#0f1624,#a875ff 55%,#00e5ff)' 
+  },
+  professional: { 
+    label: 'Professional', 
+    desc: 'High-end, sharp, and clean—like premium business software', 
+    swatch: 'linear-gradient(135deg,#111827,#4f46e5 55%,#e5e7eb)' 
+  },
+  cyberpunk: { 
+    label: 'Cyberpunk', 
+    desc: 'High-contrast neon pink and cyan on a dark grid backdrop', 
+    swatch: 'linear-gradient(135deg,#e81cff,#18181b 50%,#0ef)' 
+  },
+  forest: { 
+    label: 'Forest', 
+    desc: 'Earthy organic greens with warm crimson accents', 
+    swatch: 'linear-gradient(135deg,#386641,#f4f6f4 50%,#bc4749)' 
+  }
 };
 
 export const slugify = (s) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);

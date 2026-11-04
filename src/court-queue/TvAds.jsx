@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getCachedVideoUrl } from './videoCache.js';
+import CachedVideo from "./CachedVideo.jsx";
 
 // Resolve URL with base sub-path if necessary
 const resolveUrl = (u) => (u && u.startsWith('/') && !u.startsWith('//') ? import.meta.env.BASE_URL + u.slice(1) : u);
@@ -8,12 +8,8 @@ export const parseYouTube = (url) => (url.match(/(?:youtu\.be\/|v=|embed\/|short
 export const detectAdType = (url) =>
   parseYouTube(url) ? 'youtube' : /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url) ? 'video' : 'image';
 
-/* Left panel of the TV: plays the ad playlist in a loop with offline caching support.
-   - video: cached locally to IndexedDB, plays to the end, then next item
-   - youtube / image: shown for `seconds`, then next item */
 export function AdPanel({ ads, sound, fill, volume = 1 }) {
   const [i, setI] = useState(0);
-  const [mediaSrc, setMediaSrc] = useState('');
   const cur = ads.length ? ads[i % ads.length] : null;
   const next = useCallback(() => setI((x) => x + 1), []);
   const videoRef = useRef(null);
@@ -32,38 +28,6 @@ export function AdPanel({ ads, sound, fill, volume = 1 }) {
       );
     }
   }, []);
-
-  // Cache video locally to IndexedDB when current ad changes
-  useEffect(() => {
-    let active = true;
-    let objectUrlToClean = null;
-
-    if (!cur) {
-      setMediaSrc('');
-      return undefined;
-    }
-
-    const resolved = resolveUrl(cur.url);
-
-    if (cur.type === 'video') {
-      getCachedVideoUrl(resolved).then((cached) => {
-        if (!active) return;
-        if (cached.startsWith('blob:')) {
-          objectUrlToClean = cached;
-        }
-        setMediaSrc(cached);
-      });
-    } else {
-      setMediaSrc(resolved);
-    }
-
-    return () => {
-      active = false;
-      if (objectUrlToClean) {
-        URL.revokeObjectURL(objectUrlToClean);
-      }
-    };
-  }, [cur?.id, cur?.url, cur?.type]);
 
   // Smooth audio fading (ducks when TV announces)
   useEffect(() => {
@@ -100,11 +64,11 @@ export function AdPanel({ ads, sound, fill, volume = 1 }) {
 
   if (cur.type === 'video') {
     return (
-      <video
+      <CachedVideo
         ref={videoRef}
         key={`${cur.id}-${i}`}
         className={cls}
-        src={mediaSrc || resolveUrl(cur.url)}
+        url={resolveUrl(cur.url)}
         autoPlay
         muted={!sound}
         playsInline
@@ -137,7 +101,7 @@ export function AdPanel({ ads, sound, fill, volume = 1 }) {
     <img
       key={`${cur.id}-${i}`}
       className={cls}
-      src={mediaSrc || resolveUrl(cur.url)}
+      src={resolveUrl(cur.url)}
       alt={cur.title || ''}
       onError={() => setTimeout(next, 3000)}
     />
