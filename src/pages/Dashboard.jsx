@@ -4,9 +4,9 @@ import { summarize } from '../money/income.js';
 import { fmtMoney, useSettings } from '../money/pricing.js';
 import { Link } from '../hub/links.jsx';
 import {
-  activeBooking, bookingsOn, fmtDate, fmtTime, isPastBooking, isUpcoming, nextBooking, todayStr, toMin, useClockTick, useCourtStore,
-} from '../court-queue/CourtQueue.jsx';
-
+  activeBooking, bookingsOn, fmtDate, fmtTime, isPastBooking, isUpcoming, nextBooking, todayStr, toMin, useClockTick,
+} from '../court-queue/courtQueue.js';
+import { useCourtStore } from '../court-queue/useCourtStore.js';
 const DAYS_AHEAD = 14;
 const addDays = (n) => {
   const d = new Date();

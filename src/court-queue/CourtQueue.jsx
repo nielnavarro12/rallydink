@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AdPanel, Ticker } from "./TvAds.jsx";
 import GameTimer from "./GameTimer.jsx";
+import ControlPage from "./ControlPage.jsx";
+import PickleballCourt from "./PickleballCourt.jsx";
+import ScheduleView from "./ScheduleView.jsx";
+import TvPage from "./TvPage.jsx";
+import {initial} from "./initial.js";
+import{useCourtStore, activeBooking, nextBooking, fmtTime} from "./useCourtStore.js";
 import { useSpeech } from "../speech/useSpeech.js";
 import { hasStats, recordResult } from "../stats/stats.js";
 import StatsView from "../stats/StatsView.jsx";
@@ -460,6 +466,7 @@ export const bookingsOn = (s, date, court) =>
   (s.bookings || []).filter(
     (b) => b.date === date && (court == null || b.court === court),
   );
+
 export const activeBooking = (s, court) =>
   bookingsOn(s, todayStr(), court).find(
     (b) => toMin(b.start) <= nowMin() && nowMin() < toMin(b.end),
@@ -590,13 +597,6 @@ const spokenText = (ev) =>
     ? `Now calling. Court ${ev.court}. ${ev.p1.join(" and ")}, versus ${ev.p2.join(" and ")}. Please proceed to court ${ev.court}.`
     : `Congratulations ${ev.win.join(" and ")}! Great match.`;
 
-/* =====================================================================
-   TV page: route it at e.g. /queue/tv
-   ===================================================================== */
-
-/* =====================================================================
-   Open play schedule
-   ===================================================================== */
 export const pad = (n) => String(n).padStart(2, "0");
 export const todayStr = () => {
   const d = new Date();
@@ -626,8 +626,7 @@ export const fmtTime = (hhmm) => {
     minute: "2-digit",
   });
 };
-export const LEVELS = ["All levels", "Beginner","Low Intermediate", "Intermediate", "High Intermediate", "Advanced"];
-export const SPORTS = ["Pickleball", "Badminton"];
+
 function ScheduleView({ sessions }) {
   const days = [];
   sessions.slice(0, 10).forEach((x) => {

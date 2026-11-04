@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fmtDate, fmtTime, isPastBooking, todayStr } from '../court-queue/CourtQueue.jsx';
+import { fmtDate, fmtTime, isPastBooking, todayStr } from '../court-queue/courtQueue.js';
 import PayControl from '../components/PayControl.jsx';
 import { useAuth, useCollection } from '../data/hooks.js';
 import { recordPayment, voidSale } from '../money/domain.js';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCourtStore } from '../court-queue/CourtQueue.jsx';
+import { useCourtStore } from '../court-queue/useCourtStore.js';
 import { useCollection } from '../data/hooks.js';
 import { deletePlayer, savePlayer } from '../data/domain.js';
 import { PLAYER_LEVELS, playerLevel } from '../data/levels.js';

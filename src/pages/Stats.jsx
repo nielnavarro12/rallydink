@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { fmtDate, todayStr, useCourtStore } from '../court-queue/CourtQueue.jsx';
+import { fmtDate, todayStr } from '../court-queue/courtQueue.js';
+import { useCourtStore } from '../court-queue/useCourtStore.js';
 import { bestPairOfDay, pairRows, playerOfDay, resetAll, resetDay, rows, swapResult, undoResult } from '../stats/stats.js';
 
 const SCOPES = [['today', 'Today'], [7, 'Last 7 days'], [30, 'Last 30 days'], ['all', 'All time']];

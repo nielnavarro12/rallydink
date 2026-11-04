@@ -1,4 +1,3 @@
-
 function ScheduleView({ sessions }) {
   const days = [];
   sessions.slice(0, 10).forEach((x) => {

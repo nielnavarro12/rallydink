@@ -50,3 +50,4 @@ function PickleballCourt({ court, rental, next, limit = 0 }) {
     </div>
   );
 }
+export default PickleballCourt;

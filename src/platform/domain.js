@@ -1,6 +1,7 @@
 import { data } from '../data/index.js';
 
 /* Platform console: creating hubs (venues), their themes and owners. Only super admins can do any of this. */
+/* Platform console: creating hubs (venues), their themes and owners. Only super admins can do any of this. */
 export const THEMES = {
   candy: { 
     label: 'Candy', 
@@ -31,6 +32,16 @@ export const THEMES = {
     label: 'Forest', 
     desc: 'Earthy organic greens with warm crimson accents', 
     swatch: 'linear-gradient(135deg,#386641,#f4f6f4 50%,#bc4749)' 
+  },
+  sunset: {
+    label: 'Sunset',
+    desc: 'Warm gradients and twilight glow with vibrant orange and magenta',
+    swatch: 'linear-gradient(135deg,#1b0938,#bd4b5e 50%,#f28b5a)'
+  },
+  oceanic: {
+    label: 'Oceanic',
+    desc: 'Deep sea navy and rich teals with bioluminescent aqua accents',
+    swatch: 'linear-gradient(135deg,#010a15,#005a75 50%,#00e5ff)'
   }
 };
 

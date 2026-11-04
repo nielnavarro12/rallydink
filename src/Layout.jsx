@@ -22,7 +22,7 @@ export default function Layout() {
   const hh = useHubHref();
 
   return (
-    <>
+    <div style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden" }}>
       <nav className="cq-nav" aria-label="Main">
         <div
           className="cq-nav-brand"
@@ -53,18 +53,20 @@ export default function Layout() {
               </NavLink>
             ))}
 
-          <NavLink to="/c" className="cq-nav-tv">
+          {/* <NavLink to="/c" className="cq-nav-tv">
             Client page
-          </NavLink>
+          </NavLink> */}
+  
           {isSuper && mode === "firebase" && (
             <NavLink to="/platform">Platform</NavLink>
           )}
           <a href={hh("/tv")} target="_blank" rel="noreferrer">
             📺 TV
           </a>
+          
         </div>
       </nav>
       <Outlet />
-    </>
+    </div>
   );
 }

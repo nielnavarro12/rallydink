@@ -1,7 +1,8 @@
 import { useState } from "react";
 import {
   LEVELS,
-  SPORTS,
+  SPORTS} from "../court-queue/initial.js";
+import {
   fmtDate,
   fmtTime,
   isUpcoming,
@@ -9,8 +10,9 @@ import {
   todayStr,
   toMin,
   useClockTick,
-  useCourtStore,
-} from "../court-queue/CourtQueue.jsx";
+  
+} from "../court-queue/courtQueue.js";
+import {useCourtStore} from "../court-queue/useCourtStore.js";
 import PayControl from "../components/PayControl.jsx";
 import { useAuth, useCollection } from "../data/hooks.js";
 import { createSession, deleteSession, updateSession } from "../data/domain.js";

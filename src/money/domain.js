@@ -1,6 +1,6 @@
 import { data } from '../data/index.js';
 import { newId } from '../data/ids.js';
-import { todayStr } from '../court-queue/CourtQueue.jsx';
+import { todayStr } from '../court-queue/courtQueue.js';
 
 /* POS, inventory and payments. Income is always computed from the `sales` records:
    sale = { ts, date, lines: [{ cat: 'rental' | 'openplay' | 'product', id, name, price, qty }], total, method, ref, note, void }

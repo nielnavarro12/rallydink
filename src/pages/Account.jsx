@@ -3,7 +3,8 @@ import { data } from "../data/index.js";
 import { Link } from "../hub/links.jsx";
 import { useAuth } from "../data/hooks.js";
 import { ROLES } from "../auth/roles.js";
-import { resizeCourts, useCourtStore } from "../court-queue/CourtQueue.jsx";
+import { useCourtStore } from "../court-queue/useCourtStore.js";
+import { resizeCourts } from "../court-queue/courtQueue.js";
 import { DEFAULT_SETTINGS, useSettings } from "../money/pricing.js";
 import { uploadHubMedia } from "../data/storage.js"; // Adjust this import path to where your uploadHubMedia file lives
 

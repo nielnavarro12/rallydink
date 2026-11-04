@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useHubHref } from "../hub/links.jsx";
-import { useCourtStore } from "../court-queue/CourtQueue.jsx";
+import { useCourtStore } from "../court-queue/useCourtStore.js";
 import { detectAdType } from "../court-queue/TvAds.jsx";
 import VoicePicker from "../components/VoicePicker.jsx";
 import { useSpeech } from "../speech/useSpeech.js";
@@ -134,14 +134,14 @@ const handleFileUpload = async (e) => {
       </div>
 <div className="cq-card">
         <h2>TV layout</h2>
-        <div className="cq-row">
+        {/* <div className="cq-row">
           <input
             type="text"
             value={s.club || ""}
             placeholder="Header title (e.g. your club name)"
             onChange={(e) => set({ club: e.target.value })}
           />
-        </div>
+        </div> */}
         <div className="cq-row" style={{ marginTop: 10 }}>
           <label className="cq-check">
             <input

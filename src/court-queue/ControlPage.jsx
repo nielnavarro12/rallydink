@@ -1,10 +1,7 @@
 /* =====================================================================
    Control page: route it at e.g. /queue
    ===================================================================== */
-
-
-
- function ControlPage() {
+export function ControlPage() {
   const hh = useHubHref();
   const [s, update] = useCourtStore();
   useClockTick();

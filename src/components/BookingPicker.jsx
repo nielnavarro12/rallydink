@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CLOSE_MIN, OPEN_MIN, fmtDate, fmtTime, nowMin, toHHMM, toMin, todayStr, useClockTick } from '../court-queue/CourtQueue.jsx';
+import { CLOSE_MIN, OPEN_MIN, fmtDate, fmtTime, nowMin, toHHMM, toMin, todayStr, useClockTick } from '../court-queue/courtQueue.js';
 
 import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 // Updated to 60 minutes per slot (hourly blocks)

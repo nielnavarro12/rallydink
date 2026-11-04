@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BookingPicker from '../components/BookingPicker.jsx';
-import { fmtDate, fmtTime, isPastBooking, isUpcoming, useCourtStore } from '../court-queue/CourtQueue.jsx';
+import { fmtDate, fmtTime, isPastBooking, isUpcoming } from '../court-queue/courtQueue.js';
+import { useCourtStore } from '../court-queue/useCourtStore.js';
 import { openPlayBlocks } from '../data/blocks.js';
 import PayControl from '../components/PayControl.jsx';
 import { useAuth, useCollection } from '../data/hooks.js';
