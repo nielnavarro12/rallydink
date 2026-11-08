@@ -179,11 +179,32 @@ export const deletePlayer = (id) => data.deleteDoc('players', id);
 export const setAdmin = (uid, on, role = 'frontdesk') => (on ? data.setDoc('admins', uid, { role, ts: Date.now() }) : data.deleteDoc('admins', uid));
 
 /* ---------- users (accounts) ---------- */
-const randomPassword = () => {
-  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto.getRandomValues(new Uint8Array(14)) : Array.from({ length: 14 }, () => Math.floor(Math.random() * 256));
-  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
-};
+// const randomPassword = () => {
+//   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+//   const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto.getRandomValues(new Uint8Array(14)) : Array.from({ length: 14 }, () => Math.floor(Math.random() * 256));
+//   return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+// };
+export function randomPassword(len = 16) {
+  const sets = [
+    'ABCDEFGHJKLMNPQRSTUVWXYZ',
+    'abcdefghijkmnopqrstuvwxyz',
+    '23456789',
+    '!@#$%^&*-_?',
+  ];
+  const all = sets.join('');
+  const pick = (s) => s[crypto.getRandomValues(new Uint32Array(1))[0] % s.length];
+
+  // one from each class, the rest from everything
+  const chars = sets.map(pick);
+  while (chars.length < len) chars.push(pick(all));
+
+  // Fisher-Yates shuffle so the guaranteed characters aren't always first
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
 const AUTH_ERRORS = {
   'auth/email-already-in-use': 'That email already has an account. If they are in the list below, change their role there; otherwise ask them to open this venue\'s page and sign in once, and they will appear in the list.',
   'auth/invalid-email': 'That email address does not look right.',
@@ -194,7 +215,7 @@ const AUTH_ERRORS = {
 
 /* Create an account for someone (an owner does this). The person gets a reset-password email to choose their own
    password; the temporary password is returned too, in case the email is slow. role: 'client' or a staff role. */
-export async function addUser({ name, email, phone = '', level = '', role = 'client' }) {
+export async function addUser({ name, email, phone = '', level = '', role = 'client' }) { 
   const em = (email || '').trim().toLowerCase();
   const nm = (name || '').trim();
   if (!nm || !em) return { ok: false, error: 'Enter a name and an email.' };
