@@ -71,7 +71,7 @@ export default function IncomePage() {
             <span className="bar-track">
               {CATS.map(([k]) => d[k] > 0 && <span key={k} className="bar-seg" title={`${k}: ${money(d[k])}`} style={{ width: `${(d[k] / max) * 100}%`, background: COLORS[k] }} />)}
             </span>
-            <b className="bar-val">{money(d.total)}</b>
+            <b className="bar-val">{" "} {money(d.total)}</b>
           </div>
         ))}
         <div className="cq-row" style={{ marginTop: 10 }}>

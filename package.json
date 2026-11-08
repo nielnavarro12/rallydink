@@ -10,20 +10,26 @@
   },
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
-    "firebase": "^13.1.0",
+  "firebase": "^13.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^1.1.0"
   },
   "allowScripts": {
     "protobufjs@7.6.6": true,
     "@firebase/util@1.15.3": true
   },
   "overrides": {
-    "@grpc/grpc-js": "^1.13.6"
+    "@grpc/grpc-js": "^1.13.6",
+    "vite-plugin-pwa": {
+      "vite": "^8.0.0"
+    },
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1"
   }
 }

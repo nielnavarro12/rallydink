@@ -19,8 +19,6 @@ export default function Home() {
     const c = slugify(code); 
     if (c) nav(`/h/${c}`); 
   };
-console.log('Home component rendered. User:', user, 'Mode:', mode, 'IsSuper:', isSuper, 'Hubs:', hubs);
- 
 const handleCreateHub = async () => {
   const hubId = slugify(newHubName);
   if (!hubId || !user?.uid) return;

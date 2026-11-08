@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { CLOSE_MIN, OPEN_MIN, fmtDate, fmtTime, nowMin, toHHMM, toMin, todayStr, useClockTick } from '../court-queue/courtQueue.js';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
-// Updated to 60 minutes per slot (hourly blocks)
 const SLOT_INTERVAL = 60;
-
 const SLOTS = Array.from({ length: (CLOSE_MIN - OPEN_MIN) / SLOT_INTERVAL }, (_, i) => OPEN_MIN + i * SLOT_INTERVAL);
 const DURATIONS = [[60, '1 h'], [120, '2 h'], [180, '3 h'], [240, '4 h']];
 const hrs = (min) => `${min / 60}`.replace(/\.0$/, '') + ' h';
@@ -13,6 +11,7 @@ function Timeline({ courts, rentals, date, court, onPick }) {
   const span = CLOSE_MIN - OPEN_MIN;
   const ticks = [];
   for (let m = OPEN_MIN; m <= CLOSE_MIN; m += 120) ticks.push(m);
+
   return (
     <div className="tl">
       <div className="tl-row">
@@ -26,7 +25,12 @@ function Timeline({ courts, rentals, date, court, onPick }) {
         </div>
       </div>
       {courts.map((n) => (
-        <button key={n} className={`tl-row${n === court ? ' on' : ''}`} onClick={() => onPick(n)} aria-label={`Select court ${n}`}>
+        <button
+          key={n}
+          className={`tl-row${n === court ? ' on' : ''}`}
+          onClick={() => onPick(n)}
+          aria-label={`Select court ${n}`}
+        >
           <span className="tl-name">Court {n}</span>
           <div className="tl-bar">
             {rentals
@@ -76,12 +80,13 @@ export default function BookingPicker({
   const [busy, setBusy] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
+
   useEffect(() => {
     if (defaultName) setName((n) => n || defaultName);
   }, [defaultName]);
 
-  const everything = [...rentals, ...blocks]; // rentals and open play sessions
+  const everything = [...rentals, ...blocks];
   const day = everything.filter((b) => b.date === date && b.court === court);
   const taken = (m) => day.find((b) => toMin(b.start) <= m && m < toMin(b.end));
   const past = (m) => date === todayStr() && m + SLOT_INTERVAL <= nowMin();
@@ -119,6 +124,7 @@ export default function BookingPicker({
       setMsg({ bad: true, t: r.error });
     }
   };
+
   return (
     <div>
       <div className="cq-row">
@@ -225,13 +231,15 @@ export default function BookingPicker({
             onChange={(e) => setNote(e.target.value)}
           />
         )}
-         {!name ? (
-                 <button className="primary" onClick={() => navigate(`${location.pathname}/login`)}>Log in to book a court</button>
-              ) : (
-                <button className="primary" disabled={!sel || !name.trim() || busy} onClick={book}>
-                  {busy ? 'Booking…' : 'Book court'}
-                </button>
-              )}
+        {!name ? (
+          <button className="primary" onClick={() => navigate(`${location.pathname}/login`)}>
+            Log in to book a court
+          </button>
+        ) : (
+          <button className="primary" disabled={!sel || !name.trim() || busy} onClick={book}>
+            {busy ? 'Booking…' : 'Book court'}
+          </button>
+        )}
       </div>
       {msg && (
         <div role="status" className="cq-msg" style={msg.bad ? { color: '#d9480f' } : undefined}>

@@ -1,6 +1,13 @@
 /* =====================================================================
    Control page: route it at e.g. /queue
    ===================================================================== */
+   import { useHubHref } from "../hub/links.jsx";
+   import {useCourtStore} from './useCourtStore.js';
+   import {useClockTick, activePairs, pick, mateOf,activeBooking, nextBooking, norm, fmtWait, fmtTime,callMatch, shuffle ,cancelMatch, finishMatch  } from './courtQueue.js';
+   import {useCollection} from '../data/hooks.js';
+   import {useState} from 'react';  
+   import GameTimer from "./GameTimer.jsx"
+   import { levelNum, playerLevel } from "../data/levels.js";
 export function ControlPage() {
   const hh = useHubHref();
   const [s, update] = useCourtStore();
@@ -412,7 +419,9 @@ export function ControlPage() {
           <div className="cq-item" key={`${p.n}-${i}`}>
             <span>
               <span className="cq-mut">{i + 1}&nbsp;&nbsp;</span>
+              <span className="cq-mut"> 
               {p.n}
+              </span> 
               {p.lv && <span className={`lv lv-${p.lvl}`}>{p.lv}</span>}
               {mateOf(s, p.n) && (
                 <span className="cq-mut"> 🤝 {mateOf(s, p.n)}</span>

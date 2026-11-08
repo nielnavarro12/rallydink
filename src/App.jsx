@@ -1,3 +1,6 @@
+import "./index.css";
+import "./court-queue/courtQueue.css";
+import "./themes.css";
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import Layout from './Layout.jsx';
@@ -18,7 +21,8 @@ import ClientLayout from './client/ClientLayout.jsx';
 import ClientBook from './client/ClientBook.jsx';
 import ClientOpenPlay from './client/ClientOpenPlay.jsx';
 import ClientProfile from './client/ClientProfile.jsx';
-import { ControlPage, TvPage } from './court-queue/CourtQueue.jsx';
+import ControlPage from './court-queue/ControlPage.jsx';
+import TvPage from './court-queue/TvPage.jsx';
 import { HubProvider } from './hub/HubProvider.jsx';
 import Home from './hub/Home.jsx';
 import { HubDetail, HubsPage, PlatformLayout, SuperAdminsPage } from './platform/Platform.jsx';

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { SLOT, toMin } from '../court-queue/CourtQueue.jsx';
+import { SLOT, toMin } from '../court-queue/courtQueue.js';
 import { useDocument } from '../data/hooks.js';
 
 /* Rates (settings/pricing, readable by everyone so clients can see prices; only staff can change them) */

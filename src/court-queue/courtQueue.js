@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-
 import { data, getHub } from "../data/index.js";
+ import { hasStats, recordResult } from "../stats/stats.js";
 /* =====================================================================
    Rentals (bookings): { id, court, date: 'YYYY-MM-DD', start: 'HH:MM', end: 'HH:MM', name, note }
    A court is rented right now when one of its bookings covers the current time.
    Courts without an active booking are open play courts and are used by the queue.
    ===================================================================== */
-   import { initial } from "./initial";
+import { initial } from "./initial";
 export const OPEN_MIN = 1 * 60; // first bookable time (06:00)
-export const CLOSE_MIN = 25* 60; // last possible end time (22:00)
+export const CLOSE_MIN = 25 * 60; // last possible end time (22:00)
 export const SLOT = 30; // minutes per booking slot
 
 export const load = () => {
@@ -30,13 +30,14 @@ export function useClockTick() {
     const id = setInterval(() => setT((t) => t + 1), 30000);
     return () => clearInterval(id);
   }, []);
-};
+}
 export const toHHMM = (min) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
 export const nowMin = () => {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
 };
-
+export const VIEW_MS = { courts: 25000, schedule: 12000, stats: 14000 }; // how long each TV screen stays
+export const AUTO_CALL_DELAY = 8500; // let the congratulations screen finish first
 //================================
 // BOOKING
 //================================
@@ -49,7 +50,7 @@ export const bookingsOn = (s, date, court) =>
   (s.bookings || []).filter(
     (b) => b.date === date && (court == null || b.court === court),
   );
-  
+
 export const activeBooking = (s, court) =>
   bookingsOn(s, todayStr(), court).find(
     (b) => toMin(b.start) <= nowMin() && nowMin() < toMin(b.end),
@@ -69,7 +70,6 @@ export const removeBooking = (s, id) => ({
   ...s,
   bookings: (s.bookings || []).filter((b) => b.id !== id),
 });
-
 
 export const pad = (n) => String(n).padStart(2, "0");
 export const todayStr = () => {
@@ -106,90 +106,225 @@ export const spokenText = (ev) =>
     ? `Now calling. Court ${ev.court}. ${ev.p1.join(" and ")}, versus ${ev.p2.join(" and ")}. Please proceed to court ${ev.court}.`
     : `Congratulations ${ev.win.join(" and ")}! Great match.`;
 
+const setCourt = (s, ci, m) =>
+  s.courts.map((c, i) => (i === ci ? { ...c, m } : c));
 
-    const setCourt = (s, ci, m) =>
-      s.courts.map((c, i) => (i === ci ? { ...c, m } : c));
-    
-    export function callMatch(s, ci) {
-      const c = s.courts[ci];
-      if (c.m || activeBooking(s, c.n)) return s;
-      const chosen = pick(s);
-      if (!chosen) return s;
-      const ids = chosen.flatMap((u) => u.idx);
-      // fixed partners stay a team; everyone else gets a random partner
-      const teams = chosen
-        .filter((u) => u.idx.length === 2)
-        .map((u) => u.idx.map((i) => s.q[i].n));
-      const singles = shuffle(
-        chosen.filter((u) => u.idx.length === 1).map((u) => s.q[u.idx[0]].n),
-      );
-      for (let k = 0; k < singles.length; k += 2)
-        teams.push([singles[k], singles[k + 1]]);
-      const [p1, p2] = shuffle(teams);
-      // a pair made for "next match only" is used up by this match
-      const used = new Set(
-        chosen
-          .filter((u) => u.idx.length === 2)
-          .map((u) =>
-            u.idx
-              .map((i) => norm(s.q[i].n))
-              .sort()
-              .join("|"),
-          ),
-      );
-      const left = activePairs(s).filter(
-        ([x, y, mode]) =>
-          !(mode === "once" && used.has([norm(x), norm(y)].sort().join("|"))),
-      );
-      return {
-        ...s,
-        ...(left.length !== activePairs(s).length
-          ? { partners: { date: todayStr(), list: left } }
-          : {}),
-        q: s.q.filter((_, k) => !ids.includes(k)),
-        courts: setCourt(s, ci, { p1, p2, startedAt: Date.now() }),
-        ev: { id: Date.now(), type: "call", court: c.n, p1, p2 },
-      };
+export function callMatch(s, ci) {
+  const c = s.courts[ci];
+  if (c.m || activeBooking(s, c.n)) return s;
+  const chosen = pick(s);
+  if (!chosen) return s;
+  const ids = chosen.flatMap((u) => u.idx);
+  // fixed partners stay a team; everyone else gets a random partner
+  const teams = chosen
+    .filter((u) => u.idx.length === 2)
+    .map((u) => u.idx.map((i) => s.q[i].n));
+  const singles = shuffle(
+    chosen.filter((u) => u.idx.length === 1).map((u) => s.q[u.idx[0]].n),
+  );
+  for (let k = 0; k < singles.length; k += 2)
+    teams.push([singles[k], singles[k + 1]]);
+  const [p1, p2] = shuffle(teams);
+  // a pair made for "next match only" is used up by this match
+  const used = new Set(
+    chosen
+      .filter((u) => u.idx.length === 2)
+      .map((u) =>
+        u.idx
+          .map((i) => norm(s.q[i].n))
+          .sort()
+          .join("|"),
+      ),
+  );
+  const left = activePairs(s).filter(
+    ([x, y, mode]) =>
+      !(mode === "once" && used.has([norm(x), norm(y)].sort().join("|"))),
+  );
+  return {
+    ...s,
+    ...(left.length !== activePairs(s).length
+      ? { partners: { date: todayStr(), list: left } }
+      : {}),
+    q: s.q.filter((_, k) => !ids.includes(k)),
+    courts: setCourt(s, ci, { p1, p2, startedAt: Date.now() }),
+    ev: { id: Date.now(), type: "call", court: c.n, p1, p2 },
+  };
+}
+/* =====================================================================
+   Match logic (pure functions: state in, state out)
+   ===================================================================== */
+/* ---------- fixed partners (for one day) ---------- */
+export const norm = (n) =>
+  String(n || "")
+    .trim()
+    .toLowerCase();
+// make a and b partners for today (each player can have only one partner)
+// mode 'session': partners for the rest of the queue session (until unpaired, ended, or the day ends)
+// mode 'once': partners for their next match only
+export function pairUp(s, a, b, mode = "session") {
+  if (!a || !b || norm(a) === norm(b)) return s;
+  const keep = activePairs(s).filter(
+    ([x, y]) => ![x, y].some((n) => norm(n) === norm(a) || norm(n) === norm(b)),
+  );
+  return {
+    ...s,
+    partners: {
+      date: todayStr(),
+      list: [...keep, [a, b, mode === "once" ? "once" : "session"]],
+    },
+  };
+}
+// end the queue session: every fixed partnership is cleared
+export const endSession = (s) => ({
+  ...s,
+  partners: { date: todayStr(), list: [] },
+});
+export function unpair(s, name) {
+  const k = norm(name);
+  return {
+    ...s,
+    partners: {
+      date: todayStr(),
+      list: activePairs(s).filter(([x, y]) => norm(x) !== k && norm(y) !== k),
+    },
+  };
+}
+
+export const pick = (s) => {
+  let us = units(s);
+  if (s.mode === "rand") {
+    us = shuffle(us);
+  } else if (s.mode === "level" && us.length) {
+    // the first unit in line plus the units closest in level
+    const base = us[0].lvl;
+    us = [
+      us[0],
+      ...us
+        .slice(1)
+        .sort((a, b) => Math.abs(a.lvl - base) - Math.abs(b.lvl - base)),
+    ];
+  } else if (s.mode === "wl" && us.length) {
+    const t = us[0].r;
+    const group = us.filter((u) => !t || !u.r || u.r === t);
+    if (group.reduce((n, u) => n + u.idx.length, 0) >= 4) us = group;
+  }
+  return fill(us);
+};
+export const fill =(us, need = 4, start = 0) =>{
+  if (need === 0) return [];
+  for (let i = start; i < us.length; i++) {
+    const size = us[i].idx.length;
+    if (size <= need) {
+      const rest = fill(us, need - size, i + 1);
+      if (rest) return [us[i], ...rest];
     }
-    
-    export function finishMatch(s, ci, winner) {
-      const c = s.courts[ci];
-      if (!c.m) return s;
-      const win = winner === 1 ? c.m.p1 : c.m.p2;
-      const lose = winner === 1 ? c.m.p2 : c.m.p1;
-      return {
-        ...s,
-        q: s.rejoin
-          ? [
-              ...s.q,
-              ...win.map((n) => ({ n, r: "W", at: Date.now() })),
-              ...lose.map((n) => ({ n, r: "L", at: Date.now() })),
-            ]
-          : s.q,
-        courts: setCourt(s, ci, null),
-        ...recordResult(s, { court: c.n, win, lose, date: todayStr() }), // player stats
-        ev: { id: Date.now(), type: "win", court: c.n, win },
-      };
-    }
-    
-    export const cancelMatch = (s, ci) => {
-      const m = s.courts[ci].m;
-      if (!m) return s;
-      return {
-        ...s,
-        q: [...[...m.p1, ...m.p2].map((n) => ({ n, at: Date.now() })), ...s.q],
-        courts: setCourt(s, ci, null),
-      };
-    };
-    
-    export const resizeCourts = (s, count) => {
-      let courts = s.courts.slice(0, count);
-      let q = s.q;
-      s.courts.slice(count).forEach((c) => {
-        if (c.m)
-          q = [...[...c.m.p1, ...c.m.p2].map((n) => ({ n, at: Date.now() })), ...q];
+  }
+  return null;
+}
+export const activePairs = (s) =>
+  s.partners && s.partners.date === todayStr() ? s.partners.list : [];
+export const mateOf = (s, name) => {
+  const k = norm(name);
+  for (const [a, b] of activePairs(s)) {
+    if (norm(a) === k) return b;
+    if (norm(b) === k) return a;
+  }
+  return null;
+};
+export function finishMatch(s, ci, winner) {
+  const c = s.courts[ci];
+  if (!c.m) return s;
+  const win = winner === 1 ? c.m.p1 : c.m.p2;
+  const lose = winner === 1 ? c.m.p2 : c.m.p1;
+  return {
+    ...s,
+    q: s.rejoin
+      ? [
+          ...s.q,
+          ...win.map((n) => ({ n, r: "W", at: Date.now() })),
+          ...lose.map((n) => ({ n, r: "L", at: Date.now() })),
+        ]
+      : s.q,
+    courts: setCourt(s, ci, null),
+    ...recordResult(s, { court: c.n, win, lose, date: todayStr() }), // player stats
+    ev: { id: Date.now(), type: "win", court: c.n, win },
+  };
+}
+
+export const cancelMatch = (s, ci) => {
+  const m = s.courts[ci].m;
+  if (!m) return s;
+  return {
+    ...s,
+    q: [...[...m.p1, ...m.p2].map((n) => ({ n, at: Date.now() })), ...s.q],
+    courts: setCourt(s, ci, null),
+  };
+};
+
+export const resizeCourts = (s, count) => {
+  let courts = s.courts.slice(0, count);
+  let q = s.q;
+  s.courts.slice(count).forEach((c) => {
+    if (c.m)
+      q = [...[...c.m.p1, ...c.m.p2].map((n) => ({ n, at: Date.now() })), ...q];
+  });
+  while (courts.length < count)
+    courts = [...courts, { n: courts.length + 1, m: null }];
+  return { ...s, courts, q };
+};
+
+export function units(s) {
+  const q = s.q;
+  const used = new Set();
+  const out = [];
+  q.forEach((p, i) => {
+    if (used.has(i)) return;
+    used.add(i);
+    const mate = mateOf(s, p.n);
+    const j = mate
+      ? q.findIndex((x, k) => !used.has(k) && norm(x.n) === norm(mate))
+      : -1;
+    if (j >= 0) {
+      used.add(j);
+      out.push({
+        idx: [i, j],
+        lvl: ((p.lvl ?? 2) + (q[j].lvl ?? 2)) / 2,
+        r: p.r || q[j].r,
       });
-      while (courts.length < count)
-        courts = [...courts, { n: courts.length + 1, m: null }];
-      return { ...s, courts, q };
-    };
+    } else {
+      out.push({ idx: [i], lvl: p.lvl ?? 2, r: p.r });
+    }
+  });
+  return out;
+}
+export const waitMin = (at) =>
+  Number.isFinite(at)
+    ? Math.max(0, Math.floor((Date.now() - at) / 60000))
+    : null;
+export const fmtWait = (at) => {
+  const m = waitMin(at);
+  if (m === null) return "";
+  if (m < 1) return "just joined";
+  return m < 60
+    ? `${m} min`
+    : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`;
+};
+export const fmtWaitShort = (at) => {
+  const m = waitMin(at);
+  if (m === null) return "";
+  return m < 1
+    ? "new"
+    : m < 60
+      ? `${m}m`
+      : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+};
+
+
+export const shuffle = (a) => {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+};

@@ -608,9 +608,12 @@ html[data-cq-theme="oceanic"] .tv-start { background: linear-gradient(135deg, #0
 html[data-cq-theme="oceanic"] .ov.call { background: radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.4), #010a15); border: 2px solid #00e5ff; }
 html[data-cq-theme="oceanic"] .ov.win { background: linear-gradient(135deg, #00e5ff, #64ffda); color: #010a15; }
 
+/* =====================================================================
+   Court Theme Colors (Scoped for both <html> and Modal Swatches)
+   ===================================================================== */
 
-/* CANDY (Default) */
-html[data-cq-theme="candy"], html:not([data-cq-theme]) .cq {
+/* CANDY (Default fallback) */
+[data-cq-theme="candy"], html:not([data-cq-theme]) {
   --court-outer: rgba(255, 255, 255, 0.25);
   --court-main: #7b5cff;
   --court-kitchen: #ff9ccf;
@@ -618,7 +621,7 @@ html[data-cq-theme="candy"], html:not([data-cq-theme]) .cq {
 }
 
 /* GLASS */
-html[data-cq-theme="glass"] {
+[data-cq-theme="glass"] {
   --court-outer: rgba(255, 255, 255, 0.12);
   --court-main: #1c7ed6;
   --court-kitchen: #7048e8;
@@ -626,15 +629,15 @@ html[data-cq-theme="glass"] {
 }
 
 /* DARK GLASS */
-html[data-cq-theme="dark-glass"] {
+[data-cq-theme="dark-glass"] {
   --court-outer: #0d1321;
   --court-main: #1e293b;
   --court-kitchen: #a875ff;
   --court-line: #00e5ff;
 }
 
-/* PROFESSIONAL (USAPA Classic) */
-html[data-cq-theme="professional"] {
+/* PROFESSIONAL */
+[data-cq-theme="professional"] {
   --court-outer: #e5e7eb;
   --court-main: #1e3a8a;
   --court-kitchen: #15803d;
@@ -642,7 +645,7 @@ html[data-cq-theme="professional"] {
 }
 
 /* CYBERPUNK */
-html[data-cq-theme="cyberpunk"] {
+[data-cq-theme="cyberpunk"] {
   --court-outer: #18181b;
   --court-main: #09090b;
   --court-kitchen: #e81cff;
@@ -650,7 +653,7 @@ html[data-cq-theme="cyberpunk"] {
 }
 
 /* FOREST */
-html[data-cq-theme="forest"] {
+[data-cq-theme="forest"] {
   --court-outer: #2c362d;
   --court-main: #386641;
   --court-kitchen: #6a994e;
@@ -658,7 +661,7 @@ html[data-cq-theme="forest"] {
 }
 
 /* SUNSET */
-html[data-cq-theme="sunset"] {
+[data-cq-theme="sunset"] {
   --court-outer: rgba(30, 15, 45, 0.6);
   --court-main: #642b5c;
   --court-kitchen: #f28b5a;
@@ -666,7 +669,7 @@ html[data-cq-theme="sunset"] {
 }
 
 /* OCEANIC */
-html[data-cq-theme="oceanic"] {
+[data-cq-theme="oceanic"] {
   --court-outer: #031b33;
   --court-main: #003a5c;
   --court-kitchen: #00e5ff;

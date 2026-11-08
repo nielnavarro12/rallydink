@@ -230,3 +230,96 @@ select option:checked {
     background-color 0.2s ease,
     transform 0.1s ease;
 }
+/* =====================================================================
+   AUTH BUTTON CIRCULAR PROGRESS SPINNER
+   ===================================================================== */
+.auth-btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-spinner {
+  animation: auth-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes auth-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Optional: Slight opacity fade while submitting */
+.auth-submit-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* =====================================================================
+   LOGOUT LINK STYLING (.logout-links)
+   ===================================================================== */
+
+/* Container Alignment */
+.logout-links {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Base Link Styling (Matches Navigation Theme) */
+.logout-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mut, #6b5a92);
+  text-decoration: none;
+  background: var(--card, rgba(255, 255, 255, 0.58));
+  border: 1px solid var(--bd, rgba(255, 255, 255, 0.88));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+/* Hover & Active States */
+.logout-links a:hover {
+  color: var(--tx, #3a2766);
+  background: var(--bg, rgba(255, 255, 255, 0.5));
+  border-color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.logout-links a:active {
+  transform: translateY(0);
+}
+
+.logout-links a:focus-visible {
+  outline: 2px solid var(--ac, #c2358f);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   OPTIONAL: Red Muted Danger Variant (Uncomment if you want a distinct logout red tint)
+   --------------------------------------------------------------------- */
+/*
+.logout-links a {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.logout-links a:hover {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+*/

@@ -1,7 +1,18 @@
 /* =====================================================================
    TV page: route it at e.g. /tv
    ===================================================================== */
- 
+   import {useAuth} from '../data/hooks.js';
+ import {useCourtStore} from './useCourtStore.js';
+ import {useClockTick,upcomingSessions, units , activeBooking,nextBooking, fmtWaitShort,VIEW_MS, spokenText } from './courtQueue.js';
+ import {hasStats} from '../stats/stats.js';
+ import {useSpeech} from '../speech/useSpeech.js';
+ import {useState, useEffect, useRef} from 'react';
+ import PickleballCourt from './PickleballCourt.jsx';
+ import ScheduleView from './ScheduleView.jsx';
+ import StatsView from "../stats/StatsView.jsx";
+ import GameTimer from "./GameTimer.jsx"
+ import Announcement from './Announcement.jsx';
+ import { AdPanel, Ticker } from "./TvAds.jsx";
  export function TvPage() {
    const [s, , sync] = useCourtStore({ readOnly: true });
    const { hub } = useAuth(); // Access current hub document

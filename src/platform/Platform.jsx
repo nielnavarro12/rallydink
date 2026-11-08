@@ -3,21 +3,13 @@ import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
 import { data } from '../data/index.js';
 import { useAuth, useCollection, useDocument } from '../data/hooks.js';
 import { ROLES, normalizeRole } from '../auth/roles.js';
-import { THEMES as BASE_THEMES, addHubStaff, createHub, findUserByEmail, removeHubStaff, setHubStaffRole, setSuperAdmin, slugify, updateHub, validSlug } from './domain.js';
+import { THEMES, addHubStaff, createHub, findUserByEmail, removeHubStaff, setHubStaffRole, setSuperAdmin, slugify, updateHub, validSlug } from './domain.js';
 
 const banner = "./images/logo.jpeg";
 const origin = () => window.location.href.split('#')[0];
 const copy = (t) => { try { navigator.clipboard.writeText(t); } catch { /* shown on screen anyway */ } };
 
-// Extended themes including Dark Glass
-const THEMES = {
-  ...BASE_THEMES,
-  'dark-glass': {
-    label: 'Dark Glass',
-    swatch: 'linear-gradient(135deg, #080c14, #a875ff, #00e5ff)',
-    desc: 'Deep cosmic void with vibrant neon glass panels',
-  },
-};
+
 
 /* the platform console uses the neutral professional look */
 export function PlatformLayout() {

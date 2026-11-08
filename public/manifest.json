@@ -1,0 +1,21 @@
+{
+  "short_name": "Drive n Dink",
+  "name": "Drive n Dink Court Queue",
+  "icons": [
+    {
+      "src": "/images/logo.jpeg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/images/logo.jpeg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "display": "standalone",
+  "orientation": "any"
+}

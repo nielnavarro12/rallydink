@@ -60,7 +60,7 @@
 // }
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Added for login redirect
-import { fmtDate, fmtTime, isUpcoming, sortSessions, useClockTick } from '../court-queue/CourtQueue.jsx';
+import { fmtDate, fmtTime, isUpcoming, sortSessions, useClockTick } from '../court-queue/courtQueue.js';
 import { useAuth, useCollection, useDocument, useSessions } from '../data/hooks.js';
 import { cancelSignup, signUpForSession } from '../data/domain.js';
 import { playerLevel } from '../data/levels.js';

@@ -1,6 +1,6 @@
 import { data } from './index.js';
 import { newId } from './ids.js';
-import { CLOSE_MIN, OPEN_MIN, SLOT, nowMin, toMin, todayStr } from '../court-queue/CourtQueue.jsx';
+import { CLOSE_MIN, OPEN_MIN, SLOT, nowMin, toMin, todayStr } from '../court-queue/courtQueue.js';
 
 /* Writes to the database: bookings, open play, players, staff. */
 const MAX_MINUTES = 240; // longest booking a client can make (staff are not limited)

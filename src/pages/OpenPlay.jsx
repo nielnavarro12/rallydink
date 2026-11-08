@@ -1,7 +1,5 @@
 import { useState } from "react";
-import {
-  LEVELS,
-  SPORTS} from "../court-queue/initial.js";
+import { LEVELS, SPORTS } from "../court-queue/initial.js";
 import {
   fmtDate,
   fmtTime,
@@ -10,9 +8,8 @@ import {
   todayStr,
   toMin,
   useClockTick,
-  
 } from "../court-queue/courtQueue.js";
-import {useCourtStore} from "../court-queue/useCourtStore.js";
+import { useCourtStore } from "../court-queue/useCourtStore.js";
 import PayControl from "../components/PayControl.jsx";
 import { useAuth, useCollection } from "../data/hooks.js";
 import { createSession, deleteSession, updateSession } from "../data/domain.js";
@@ -215,7 +212,7 @@ export default function OpenPlayPage() {
               onChange={setField("end")}
               aria-label="End time"
             />
-            
+
             <select value={f.sport} onChange={setField("sport")}>
               {SPORTS.map((s) => (
                 <option key={s}>{s}</option>

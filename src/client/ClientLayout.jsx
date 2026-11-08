@@ -16,7 +16,15 @@ export default function ClientLayout() {
     <>
       <nav className="cq-nav" aria-label="Main">
         <div className="cq-nav-in">
-          <b>🏸 {hub ? hub.name : 'Court Queue'}</b>
+            {hub?.logoUrl && (
+            <img
+              src={hub.logoUrl}
+              alt={`${hub.name || "Hub"} Logo`}
+              className="logo"
+            />
+         
+          )}
+          <h1 className="auth-title">{hub?.name || "Drive n Dink"}</h1>
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => (isActive ? 'active' : undefined)}>{l.label}</NavLink>
           ))}
