@@ -48,11 +48,32 @@ export const THEMES = {
 export const slugify = (s) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
 export const validSlug = (s) => /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(s) && !['platform', 'login', 'h'].includes(s);
 
-const randomPassword = () => {
-  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto.getRandomValues(new Uint8Array(14)) : Array.from({ length: 14 }, () => Math.floor(Math.random() * 256));
-  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
-};
+// const randomPassword = () => {
+//   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+//   const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto.getRandomValues(new Uint8Array(14)) : Array.from({ length: 14 }, () => Math.floor(Math.random() * 256));
+//   return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+// };
+export function randomPassword(len = 16) {
+  const sets = [
+    'ABCDEFGHJKLMNPQRSTUVWXYZ',
+    'abcdefghijkmnopqrstuvwxyz',
+    '23456789',
+    '!@#$%^&*-_?',
+  ];
+  const all = sets.join('');
+  const pick = (s) => s[crypto.getRandomValues(new Uint32Array(1))[0] % s.length];
+
+  // one from each class, the rest from everything
+  const chars = sets.map(pick);
+  while (chars.length < len) chars.push(pick(all));
+
+  // Fisher-Yates shuffle so the guaranteed characters aren't always first
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
 const AUTH_ERRORS = {
   'auth/email-already-in-use': 'That email already has an account but has not signed in to this app yet. Ask them to sign in once, then add them here.',
   'auth/invalid-email': 'That email address does not look right.',

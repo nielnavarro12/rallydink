@@ -139,7 +139,8 @@ export function rows(stats, scope, today = localDate()) {
     }
     if (w + l > 0) out.push(row(key, e.name, w, l));
   });
-  return out.sort(byWins);
+  //return out.sort(byWins);
+  return withRanks(out.sort(byWins));
 }
 
 /* Best partner combinations. scope: 'today' | 'all' */
@@ -150,12 +151,35 @@ export function pairRows(pairs, scope, today = localDate()) {
     const l = scope === 'today' ? (e.d === today ? e.dl || 0 : 0) : e.l;
     if (w + l > 0) out.push(row(key, `${e.names[0]} & ${e.names[1]}`, w, l));
   });
-  return out.sort(byWins);
+ // return out.sort(byWins);
+ return withRanks(out.sort(byWins));
 }
 
-// "Player of the day": best win-minus-loss today, at least MIN_GAMES_HIGHLIGHT games
 export const playerOfDay = (stats, today = localDate()) =>
-  rows(stats, 'today', today).filter((r) => r.games >= MIN_GAMES_HIGHLIGHT).sort(byNet)[0] || null;
+  topTied(
+    rows(stats, 'today', today)
+      .filter((r) => r.games >= MIN_GAMES_HIGHLIGHT)
+      .sort(byNet),
+  );
 
 export const bestPairOfDay = (pairs, today = localDate()) =>
-  pairRows(pairs, 'today', today).filter((r) => r.games >= MIN_GAMES_HIGHLIGHT).sort(byNet)[0] || null;
+  topTied(
+    pairRows(pairs, 'today', today)
+      .filter((r) => r.games >= MIN_GAMES_HIGHLIGHT)
+      .sort(byNet),
+  );
+// Same wins and same losses share a rank. Ties skip numbers: 1, 1, 3.
+const withRanks = (list) => {
+  let rank = 0;
+  return list.map((r, i) => {
+    const prev = list[i - 1];
+    if (!prev || prev.w !== r.w || prev.l !== r.l) rank += 1;
+    return { ...r, rank };
+  });
+};
+
+const topTied = (list) => {
+  if (!list.length) return null;
+  const top = list[0];
+  return list.filter((r) => r.w === top.w && r.l === top.l);
+};

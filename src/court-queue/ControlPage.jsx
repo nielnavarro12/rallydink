@@ -1,15 +1,35 @@
 /* =====================================================================
    Control page: route it at e.g. /queue
    ===================================================================== */
-   import { useHubHref } from "../hub/links.jsx";
-   import {useCourtStore} from './useCourtStore.js';
-   import {useClockTick, activePairs, pick, mateOf,activeBooking, nextBooking, norm, fmtWait, fmtTime,callMatch, shuffle ,cancelMatch, finishMatch  } from './courtQueue.js';
-   import {useCollection} from '../data/hooks.js';
-   import {useState} from 'react';  
-   import GameTimer from "./GameTimer.jsx"
-   import { levelNum, playerLevel } from "../data/levels.js";
+import { useHubHref } from "../hub/links.jsx";
+import { useCourtStore } from "./useCourtStore.js";
+import {
+  useClockTick,
+  activePairs,
+  pick,
+  mateOf,
+  activeBooking,
+  nextBooking,
+  norm,
+  fmtWait,
+  fmtTime,
+  callMatch,
+  shuffle,
+  cancelMatch,
+  finishMatch,
+  pairUp,
+  unpair,
+  endSession,
+  AUTO_CALL_DELAY,
+  nextGroups,
+} from "./courtQueue.js";
+import { useCollection } from "../data/hooks.js";
+import { useState } from "react";
+import GameTimer from "./GameTimer.jsx";
+import { levelNum, playerLevel } from "../data/levels.js";
+
 export function ControlPage() {
-  const hh = useHubHref();
+  const hh = useHubHref(); // eslint-disable-line no-unused-vars
   const [s, update] = useCourtStore();
   useClockTick();
   const [text, setText] = useState("");
@@ -28,7 +48,7 @@ export function ControlPage() {
     if (!names.length) return;
     const mk = (n) => {
       const p = roster.find(
-        (r) => (r.name || "").trim().toLowerCase() === n.toLowerCase(),
+        (r) => (r.name || "").trim().toLowerCase() === n.toLowerCase()
       );
       return p
         ? {
@@ -52,7 +72,7 @@ export function ControlPage() {
     update((x) => finishMatch(x, ci, winner));
     setTimeout(() => {
       update((x) =>
-        x.auto && !x.courts[ci]?.m && x.q.length >= 4 ? callMatch(x, ci) : x,
+        x.auto && !x.courts[ci]?.m && x.q.length >= 4 ? callMatch(x, ci) : x
       );
     }, AUTO_CALL_DELAY);
   };
@@ -65,6 +85,7 @@ export function ControlPage() {
     });
 
   const nextUp = pick(s);
+
   // everyone who could be paired: waiting, playing, or saved
   const known = Array.from(
     new Map(
@@ -74,25 +95,41 @@ export function ControlPage() {
         ...roster.map((r) => r.name),
       ]
         .filter(Boolean)
-        .map((n) => [norm(n), n]),
-    ).values(),
+        .map((n) => [norm(n), n])
+    ).values()
   ).sort((a, b) => a.localeCompare(b));
-  const preview = !nextUp
-    ? "Need 4 players waiting"
-    : s.mode === "rand"
-      ? "Random draw of 4 players"
-      : `Next: ${nextUp
-          .flatMap((u) => u.idx)
-          .map((i) => s.q[i].n)
-          .join(", ")}`;
 
+  // Courts that can take a queue match right now (not playing, not rented).
+  const isFree = (c) => !c.m && !activeBooking(s, c.n);
+  const firstFree = s.courts.find(isFree)?.n;
+
+  // Preview per free court: each court gets the next group of 4, minus the
+  // players already assigned to earlier free courts.
+  const previews = {};
+  let sim = s;
+  s.courts.forEach((c) => {
+    if (!isFree(c)) return;
+    const up = pick(sim);
+    if (!up) {
+      previews[c.n] = "Need 4 players waiting";
+      return;
+    }
+    const idxs = up.flatMap((u) => u.idx);
+    previews[c.n] =
+      s.mode === "rand"
+        ? "Random draw of 4 players"
+        : `Next: ${idxs.map((i) => sim.q[i].n).join(", ")}`;
+    sim = { ...sim, q: sim.q.filter((_, k) => !idxs.includes(k)) };
+  });
+
+  const freeCourts = s.courts.filter((c) => !c.m && !activeBooking(s, c.n));
+  const groups = nextGroups(s, 2);
   return (
     <div className="cq">
       <div className="cq-head">
         <h1>Queue &amp; courts</h1>
-       
       </div>
-      
+
       <div className="cq-card">
         <h2>Add players</h2>
         <div className="cq-row">
@@ -103,7 +140,7 @@ export function ControlPage() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addPlayers()}
           />
-          <button className="primary" onClick={addPlayers}>
+          <button className="primary" onClick={() => addPlayers()}>
             Add
           </button>
           <label className="cq-check">
@@ -127,8 +164,8 @@ export function ControlPage() {
                     !s.q.some(
                       (x) =>
                         (x.n || "").toLowerCase() ===
-                        (r.name || "").toLowerCase(),
-                    ),
+                        (r.name || "").toLowerCase()
+                    )
                 )
                 .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
                 .map((r) => (
@@ -139,7 +176,6 @@ export function ControlPage() {
                 ))}
             </select>
           )}
-         
         </div>
         <div className="cq-row" style={{ marginTop: 10 }}>
           <label className="cq-check">
@@ -182,7 +218,6 @@ export function ControlPage() {
             />{" "}
             Show player stats on TV
           </label>
-         
         </div>
       </div>
 
@@ -205,7 +240,6 @@ export function ControlPage() {
             value={pb}
             onChange={(e) => setPb(e.target.value)}
             aria-label="Second partner"
-            
             style={{ width: 250, maxWidth: 500 }}
           >
             <option value="">Partner…</option>
@@ -219,7 +253,7 @@ export function ControlPage() {
             value={pmode}
             onChange={(e) => setPmode(e.target.value)}
             aria-label="How long"
-                  style={{ width: 250, maxWidth: 500 }}
+            style={{ width: 250, maxWidth: 500 }}
           >
             <option value="session">Rest of the queue session</option>
             <option value="once">Next match only</option>
@@ -263,7 +297,7 @@ export function ControlPage() {
               className="small"
               onClick={() =>
                 window.confirm(
-                  "End the queue session? All fixed partners are cleared.",
+                  "End the queue session? All fixed partners are cleared."
                 ) && update(endSession)
               }
             >
@@ -341,11 +375,13 @@ export function ControlPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="cq-mut">{preview}</div>
+                    <div className="cq-mut">{previews[c.n]}</div>
                     <div style={{ marginTop: 10 }}>
                       <button
                         className="primary"
-                        disabled={!nextUp}
+                        disabled={
+                          !nextUp || (s.mode !== "rand" && c.n !== firstFree)
+                        }
                         onClick={() => update((x) => callMatch(x, i))}
                       >
                         Call match
@@ -362,52 +398,77 @@ export function ControlPage() {
             );
           })}
         </div>
-          <div className="cq-row" style={{ marginTop: 20, marginBottom: 10   }}>
-             
-    <div className="cq-row" style={{ marginTop: 10, flexWrap: "wrap", gap: 20 }}>
-       <label className="cq-check">
-            Game time (min, 0 = no limit){" "}
-            <input
-              type="number"
-              min={0}
-              max={90}
-              value={s.gameMinutes || 0}
-              onChange={(e) =>
-                set({ gameMinutes: Math.max(0, +e.target.value || 0) })
-              }
-              style={{ width: 70 }}
-            />
-          </label>
-          <select
-            value={s.mode}
-            onChange={(e) => set({ mode: e.target.value })}
-            style={{ width: "auto", maxWidth: 400 }}
-            aria-label="How to pick the next match"
+        <div className="cq-row" style={{ marginTop: 20, marginBottom: 10 }}>
+          <div
+            className="cq-row"
+            style={{ marginTop: 10, flexWrap: "wrap", gap: 20 }}
           >
-            <option value="fifo">Next 4 in line</option>
-            <option value="rand">Random 4</option>
-            <option value="level">Similar levels</option>
-            <option value="wl">Winners with winners, losers with losers</option>
-          </select>
-           <button onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))}>
-            Shuffle list
-          </button>
-          <button
-            onClick={() =>
-              update((x) => ({
-                ...x,
-                q: [],
-                courts: x.courts.map((c) => ({ ...c, m: null })),
-                ev: null,
-              }))
-            }
-          >
-            Reset all
-          </button>
-         
-       </div>
- 
+            <b>Up Next:</b>
+            {groups.length === 0 ? (
+              <span>Need 4 players waiting</span>
+            ) : (
+              groups.map((g, i) => (
+                <span key={i}>
+                  <b>
+                    {freeCourts[i]
+                      ? `Court ${freeCourts[i].n}`
+                      : i === freeCourts.length
+                      ? ""
+                      : `After that :`}
+                    
+                  </b>{" "}
+                  {g.join(", ")}
+                </span>
+              ))
+            )}
           </div>
+          <div
+            className="cq-row"
+            style={{ marginTop: 10, flexWrap: "wrap", gap: 20 }}
+          >
+            <label className="cq-check">
+              Game time (min, 0 = no limit){" "}
+              <input
+                type="number"
+                min={0}
+                max={90}
+                value={s.gameMinutes || 0}
+                onChange={(e) =>
+                  set({ gameMinutes: Math.max(0, +e.target.value || 0) })
+                }
+                style={{ width: 70 }}
+              />
+            </label>
+            <select
+              value={s.mode}
+              onChange={(e) => set({ mode: e.target.value })}
+              style={{ width: "auto", maxWidth: 400 }}
+              aria-label="How to pick the next match"
+            >
+              <option value="fifo">Next 4 in line</option>
+              <option value="rand">Random 4</option>
+              <option value="level">Similar levels</option>
+              <option value="wl">
+                Winners with winners, losers with losers
+              </option>
+            </select>
+            <button onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))}>
+              Shuffle list
+            </button>
+            <button
+              onClick={() =>
+                update((x) => ({
+                  ...x,
+                  q: [],
+                  courts: x.courts.map((c) => ({ ...c, m: null })),
+                  ev: null,
+                }))
+              }
+            >
+              Reset all
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="cq-card">
@@ -419,9 +480,7 @@ export function ControlPage() {
           <div className="cq-item" key={`${p.n}-${i}`}>
             <span>
               <span className="cq-mut">{i + 1}&nbsp;&nbsp;</span>
-              <span className="cq-mut"> 
-              {p.n}
-              </span> 
+              <span className="cq-mut">{p.n}</span>
               {p.lv && <span className={`lv lv-${p.lvl}`}>{p.lv}</span>}
               {mateOf(s, p.n) && (
                 <span className="cq-mut"> 🤝 {mateOf(s, p.n)}</span>
