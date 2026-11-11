@@ -102,7 +102,7 @@ export default function UsersPage() {
   };
 
   const isStoreRole = typeof role === "string" && role.startsWith("store_");
-  console.log("isStoreRole", isStoreRole, role);
+  console.log("isStoreRole", isStoreRole, role, ROLE_KEYS, user);
   const getFilteredRoles = (roleKeys) => {
     const isStoreRole = typeof role === "string" && role.startsWith("store_");
     return roleKeys.filter((k) =>
