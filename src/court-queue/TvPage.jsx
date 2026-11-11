@@ -177,34 +177,23 @@ export function TvPage() {
                     <span>Random draw of 4 players</span>
                   ) : groups.length ? (
                     groups.map((g, i) => (
-                      <div
+                      <span
                       key={i}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "1.25rem",
-                        padding: "1rem 1.5rem",
-                        margin: "0.75rem 0",
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "2px solid rgba(255, 255, 255, 0.2)",
-                        borderRadius: "14px",
-                        fontSize: "clamp(1.5rem, 2.2vw, 2.75rem)",
-                        lineHeight: "1.2",
-                        color: "#ffffff",
-                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                        display: "block",
+                        fontSize: "clamp(1.75rem, 2.5vw, 3.25rem)",
+                        lineHeight: "1.35",
+                        fontWeight: "600",
+                        color: "#f8fafc",
+                        marginBottom: "1rem",
+                        textShadow: "0 2px 8px rgba(0,0,0,0.5)",
                       }}
                     >
-                      <span
+                      <b
                         style={{
-                          background: freeCourts[i] ? "#4f46e5" : "#3b82f6",
-                          color: "#ffffff",
-                          padding: "0.4rem 1rem",
-                          borderRadius: "8px",
+                          color: freeCourts[i] ? "#60a5fa" : "#fbbf24",
                           fontWeight: "800",
-                          letterSpacing: "0.02em",
-                          whiteSpace: "nowrap",
-                          textTransform: "uppercase",
-                          fontSize: "clamp(1.4rem, 2vw, 2.4rem)",
+                          fontSize: "1.1em",
                         }}
                       >
                         {freeCourts[i]
@@ -212,12 +201,12 @@ export function TvPage() {
                           : i === freeCourts.length
                           ? "Next Available Court"
                           : "After That"}
-                      </span>
-                    
-                      <span style={{ fontWeight: "700", color: "#f8fafc", wordBreak: "break-word" }}>
+                        :
+                      </b>{" "}
+                      <span style={{ color: "#ffffff", fontWeight: "700" }}>
                         {g.join(" · ")}
                       </span>
-                    </div>
+                    </span>
                     ))
                   ) : (
                     <span>—</span>

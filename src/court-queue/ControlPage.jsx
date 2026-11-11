@@ -27,9 +27,15 @@ import { useCollection } from "../data/hooks.js";
 import { useState } from "react";
 import GameTimer from "./GameTimer.jsx";
 import { levelNum, playerLevel } from "../data/levels.js";
-import Icon
- from "../components/Icon.jsx"; 
- import { HelpCircle, ListPlus, ListRestart, Megaphone, Shuffle, UsersCollaboration } from "lucide-react";
+import Icon from "../components/Icon.jsx";
+import {
+  HelpCircle,
+  ListPlus,
+  ListRestart,
+  Megaphone,
+  Shuffle,
+  UsersCollaboration,
+} from "lucide-react";
 export function ControlPage() {
   const hh = useHubHref(); // eslint-disable-line no-unused-vars
   const [s, update] = useCourtStore();
@@ -142,8 +148,16 @@ export function ControlPage() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addPlayers()}
           />
-          <button className="primary" onClick={() => addPlayers()} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-              <Icon icon={ListPlus} size={20} />
+          <button
+            className="primary"
+            onClick={() => addPlayers()}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <Icon icon={ListPlus} size={20} />
             Add
           </button>
           <label className="cq-check">
@@ -189,14 +203,7 @@ export function ControlPage() {
             />{" "}
             Voice on TV
           </label>
-          <label className="cq-check">
-            <input
-              type="checkbox"
-              checked={s.auto}
-              onChange={(e) => set({ auto: e.target.checked })}
-            />{" "}
-            Auto-call next match
-          </label>
+
           <label className="cq-check">
             <input
               type="checkbox"
@@ -269,7 +276,12 @@ export function ControlPage() {
               setPa("");
               setPb("");
             }}
-            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
             <Icon icon={UsersCollaboration} size={20} />
             Pair up
           </button>
@@ -333,6 +345,17 @@ export function ControlPage() {
               .join(", ")}`}
           {" · "}Set up rentals on the Rentals page.
         </div>
+        <div className="cq-mut" style={{ marginBottom: 10 }}>
+          <label className="cq-check">
+            <input
+              type="checkbox"
+              checked={s.auto}
+              onChange={(e) => set({ auto: e.target.checked })}
+            />{" "}
+            Auto-call next match
+          </label>
+        </div>
+
         <div className="cq-courts">
           {s.courts.map((c, i) => {
             const rb = activeBooking(s, c.n);
@@ -387,7 +410,12 @@ export function ControlPage() {
                           !nextUp || (s.mode !== "rand" && c.n !== firstFree)
                         }
                         onClick={() => update((x) => callMatch(x, i))}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
                         <Icon icon={Megaphone} size={20} />
                         Call match
                       </button>
@@ -420,7 +448,6 @@ export function ControlPage() {
                       : i === freeCourts.length
                       ? ""
                       : `After that :`}
-                    
                   </b>{" "}
                   {g.join(", ")}
                 </span>
@@ -457,8 +484,15 @@ export function ControlPage() {
                 Winners with winners, losers with losers
               </option>
             </select>
-            <button onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                        <Icon icon={Shuffle} size={20} />
+            <button
+              onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <Icon icon={Shuffle} size={20} />
               Shuffle list
             </button>
             <button
@@ -470,7 +504,12 @@ export function ControlPage() {
                   ev: null,
                 }))
               }
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
               <Icon icon={ListRestart} size={20} />
               Reset all
             </button>
