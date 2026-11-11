@@ -1,3 +1,4 @@
+import "../themes.css";
 import { useEffect, useState } from "react";
 import {
   Link,
@@ -12,35 +13,37 @@ import { ROLES, normalizeRole } from "../auth/roles.js";
 import {
   THEMES,
   addHubStaff,
+  applyTheme,
   createHub,
+  deleteHub,
   findUserByEmail,
   removeHubStaff,
+  setHubActive,
   setHubStaffRole,
   setSuperAdmin,
   slugify,
   updateHub,
   validSlug,
 } from "./domain.js";
-
+import { Ban, CheckCircle, Play, PlayOff } from "lucide-react";
+import Icon from "../components/Icon.jsx";
 const banner = "./images/logo.jpeg";
 const origin = () => window.location.href.split("#")[0];
 const copy = (t) => {
   try {
     navigator.clipboard.writeText(t);
   } catch {
-    /* shown on screen anyway */
+    /* fallback silently */
   }
 };
 
-/* the platform console uses the neutral professional look */
+/* Platform console container */
 export function PlatformLayout() {
   const { user, mode } = useAuth();
   useEffect(() => {
-    document.documentElement.dataset.cqTheme = "professional";
-    return () => {
-      delete document.documentElement.dataset.cqTheme;
-    };
+    applyTheme("professional");
   }, []);
+
   return (
     <>
       <nav className="cq-nav" aria-label="Platform">
@@ -57,7 +60,7 @@ export function PlatformLayout() {
             to="/platform/admins"
             className={({ isActive }) => (isActive ? "active" : undefined)}
           >
-            Super admins
+            Super & Group Admins
           </NavLink>
           <span className="cq-nav-tv" />
           <NavLink to="/">Hub chooser</NavLink>
@@ -80,6 +83,11 @@ export function PlatformLayout() {
 }
 
 export function ThemePicker({ value, onChange }) {
+  const handleSelect = (k) => {
+    applyTheme(k);
+    onChange(k);
+  };
+
   return (
     <div className="theme-picker" role="radiogroup" aria-label="Theme">
       {Object.entries(THEMES).map(([k, t]) => (
@@ -89,7 +97,7 @@ export function ThemePicker({ value, onChange }) {
           role="radio"
           aria-checked={value === k}
           className={`theme-opt${value === k ? " on" : ""}`}
-          onClick={() => onChange(k)}
+          onClick={() => handleSelect(k)}
         >
           <span className="theme-sw" style={{ background: t.swatch }} />
           <b>{t.label}</b>
@@ -134,9 +142,116 @@ function Created({ r }) {
   );
 }
 
+/* Multi-Hub Scope Assignment Component */
+export function HubAssignmentManager({ user }) {
+  const hubs = useCollection("hubs") || [];
+  const [assigned, setAssigned] = useState(user?.assignedHubs || []);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    setAssigned(user?.assignedHubs || []);
+  }, [user?.assignedHubs]);
+
+  const toggleHub = (hubId) => {
+    setAssigned((prev) =>
+      prev.includes(hubId)
+        ? prev.filter((id) => id !== hubId)
+        : [...prev, hubId]
+    );
+  };
+
+  const handleSave = async () => {
+    if (!user?.uid) return;
+    setSaving(true);
+    setMsg("");
+    try {
+      await data.setDoc(
+        "users",
+        user.uid,
+        { assignedHubs: assigned },
+        { merge: true }
+      );
+      setMsg("Hub assignments saved.");
+      setTimeout(() => setMsg(""), 3000);
+    } catch (err) {
+      console.error("Failed to save hub assignments:", err);
+      setMsg("Failed to save hub assignments.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="cq-card" style={{ marginTop: 16 }}>
+      <h2>Assigned Hub Scope for {user?.name || user?.email}</h2>
+      <div className="cq-mut" style={{ margin: "6px 0 12px" }}>
+        Check the hubs this user is allowed to manage as a Group Admin:
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "8px",
+          marginBottom: "16px",
+        }}
+      >
+        {hubs.map((h) => {
+          const isChecked = assigned.includes(h.id);
+          return (
+            <label
+              key={h.id}
+              className="cq-check"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 12px",
+                border: "1px solid var(--bd)",
+                borderRadius: "6px",
+                background: isChecked ? "var(--bg)" : "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => toggleHub(h.id)}
+              />
+              <div>
+                <b>{h.name || h.id}</b>
+                <div style={{ fontSize: "0.75rem" }} className="cq-mut">
+                  Code: {h.id}
+                </div>
+              </div>
+            </label>
+          );
+        })}
+      </div>
+      <div className="cq-row">
+        <button
+          type="button"
+          className="primary"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save Assigned Hubs"}
+        </button>
+        {msg && <span role="status" className="cq-mut">{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 export function HubsPage() {
-  const { user } = useAuth();
-  const hubs = useCollection("hubs");
+  const { user, isSuper, assignedHubs } = useAuth();
+  const allHubs = useCollection("hubs") || [];
+
+  // Super admins see all hubs; group admins see assigned hubs
+  const hubs = isSuper
+    ? allHubs
+    : allHubs.filter((h) => assignedHubs.includes(h.id));
+
   const [f, setF] = useState({
     name: "",
     slug: "",
@@ -144,9 +259,10 @@ export function HubsPage() {
     ownerName: "",
     ownerEmail: "",
   });
-  const [touched, setTouched] = useState(false); // the code was typed by hand
+  const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState(null);
+
   const set = (k) => (e) => setF((v) => ({ ...v, [k]: e.target.value }));
   const onName = (e) => {
     const name = e.target.value;
@@ -171,101 +287,179 @@ export function HubsPage() {
     }
   };
 
+  const handleToggleSuspend = async (hub) => {
+    const nextState = hub.active === false;
+    const actionLabel = nextState ? "activate" : "suspend";
+    if (window.confirm(`Are you sure you want to ${actionLabel} "${hub.name}"?`)) {
+      await setHubActive(hub.id, nextState);
+    }
+  };
+
+  const handleDeleteHub = async (hub) => {
+    if (
+      window.confirm(
+        `DANGER: Permanently delete "${hub.name}" (${hub.id})? This action cannot be undone.`
+      )
+    ) {
+      await deleteHub(hub.id);
+    }
+  };
+
   return (
     <div className="cq">
       <div className="cq-head">
         <h1>Hubs</h1>
       </div>
 
-      <div className="cq-card">
-        <h2>Create a hub</h2>
-        <div className="cq-row">
-          <input
-            type="text"
-            value={f.name}
-            placeholder="Hub name (e.g. Daily Dink Caloocan)"
-            onChange={onName}
+      {isSuper && (
+        <div className="cq-card">
+          <h2>Create a Hub/Store</h2>
+          <div className="cq-row">
+            <input
+              type="text"
+              value={f.name}
+              placeholder="Hub/Store name (e.g. My Sports Club Caloocan)"
+              onChange={onName}
+            />
+            <input
+              type="text"
+              value={f.slug}
+              placeholder="Hub/Store code"
+              onChange={(e) => {
+                setTouched(true);
+                setF((v) => ({ ...v, slug: slugify(e.target.value) }));
+              }}
+              style={{ maxWidth: 220 }}
+              aria-label="Hub code"
+            />
+          </div>
+          <div className="cq-mut" style={{ margin: "6px 0 10px" }}>
+            The code is part of every link of this hub: {origin()}#/h/
+            <b>{f.slug || "code"}</b>
+          </div>
+          <ThemePicker
+            value={f.theme}
+            onChange={(theme) => setF((v) => ({ ...v, theme }))}
           />
-          <input
-            type="text"
-            value={f.slug}
-            placeholder="Hub code"
-            onChange={(e) => {
-              setTouched(true);
-              setF((v) => ({ ...v, slug: slugify(e.target.value) }));
-            }}
-            style={{ maxWidth: 220 }}
-            aria-label="Hub code"
-          />
+          <div className="cq-row" style={{ marginTop: 12 }}>
+            <input
+              type="text"
+              value={f.ownerName}
+              placeholder="Owner name"
+              onChange={set("ownerName")}
+            />
+            <input
+              type="text"
+              value={f.ownerEmail}
+              placeholder="Owner email (optional now)"
+              onChange={set("ownerEmail")}
+            />
+            <button
+              className="primary"
+              disabled={busy || !f.name.trim() || !validSlug(f.slug)}
+              onClick={create}
+            >
+              {busy ? "Creating…" : "Create hub"}
+            </button>
+          </div>
+          <div className="cq-mut" style={{ marginTop: 8 }}>
+            The owner runs the hub: staff, rates, courts, bookings and sales.
+          </div>
+          <Created r={res} />
         </div>
-        <div className="cq-mut" style={{ margin: "6px 0 10px" }}>
-          The code is part of every link of this hub: {origin()}#/h/
-          <b>{f.slug || "code"}</b>
-        </div>
-        <ThemePicker
-          value={f.theme}
-          onChange={(theme) => setF((v) => ({ ...v, theme }))}
-        />
-        <div className="cq-row" style={{ marginTop: 12 }}>
-          <input
-            type="text"
-            value={f.ownerName}
-            placeholder="Owner name"
-            onChange={set("ownerName")}
-          />
-          <input
-            type="text"
-            value={f.ownerEmail}
-            placeholder="Owner email (optional now)"
-            onChange={set("ownerEmail")}
-          />
-          <button
-            className="primary"
-            disabled={busy || !f.name.trim() || !validSlug(f.slug)}
-            onClick={create}
-          >
-            {busy ? "Creating…" : "Create hub"}
-          </button>
-        </div>
-        <div className="cq-mut" style={{ marginTop: 8 }}>
-          The owner runs the hub: staff, rates, courts, bookings and sales. They
-          see only their own hub. If the email already has an account it is
-          used, otherwise an account is created and they get an email to choose
-          a password.
-        </div>
-        <Created r={res} />
-      </div>
+      )}
 
       <div className="cq-card">
-        <h2>All hubs ({hubs.length})</h2>
+        <h2>{isSuper ? `All hubs (${hubs.length})` : `My Hubs (${hubs.length})`}</h2>
         {hubs.length === 0 && (
-          <div className="cq-mut">No hubs yet. Create the first one above.</div>
+          <div className="cq-mut">No hubs available.</div>
         )}
         {[...hubs]
           .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-          .map((h) => (
-            <div
-              className="cq-item"
-              key={h.id}
-              style={h.active === false ? { opacity: 0.6 } : undefined}
-            >
-              <span>
-                <b>{h.name}</b>{" "}
-                <span className="cq-mut">
-                  · {h.id} · {THEMES[h.theme] ? THEMES[h.theme].label : h.theme}
-                  {h.active === false ? " · inactive" : ""}
+          .map((h) => {
+            const isSuspended = h.active === false;
+            return (
+              <div
+                className="cq-item"
+                key={h.id}
+                style={isSuspended ? { opacity: 0.7, background: "rgba(239, 68, 68, 0.04)" } : undefined}
+              >
+                <span>
+                  <b>{h.name}</b>{" "}
+                  <span className="cq-mut">
+                    · {h.id} · {THEMES[h.theme] ? THEMES[h.theme].label : h.theme}
+                  </span>{" "}
+                  {isSuspended ? (
+                  <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    color: "#dc2626",
+                    fontWeight: "600",
+                    fontSize: "0.8rem",
+                    marginLeft: "6px",
+                  }}
+                >
+                  <Icon icon={Ban} size={14} />
+                  <span>[SUSPENDED]</span>
                 </span>
-              </span>
-              <span className="cq-row" style={{ flexWrap: "nowrap" }}>
-                <Link className="cq-btn" to={`/platform/hubs/${h.id}`}>
-                  Manage
-                </Link>
-                <Link className="cq-btn" to={`/h/${h.id}`}>
-                  Open
-                </Link>
-              </span>
-            </div>
-          ))}
+                  ) : ( <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      color: "#16a34a",
+                      fontWeight: "600",
+                      fontSize: "0.8rem",
+                      marginLeft: "6px",
+                    }}
+                  >
+                    <Icon icon={CheckCircle} size={14} />
+                    <span>[ACTIVE]</span>
+                      
+                    </span>
+                  )}
+                </span>
+
+                <span className="cq-row" style={{ flexWrap: "nowrap", gap: "6px" }}>
+                  <Link className="cq-btn" to={`/platform/hubs/${h.id}`}>
+                    Manage
+                  </Link>
+                  <Link className="cq-btn" to={`/h/${h.id}`}>
+                    Open
+                  </Link>
+                  
+                  {/* Super Admin Lifecycle Actions */}
+                  {isSuper && (
+                    <>
+                      <button
+                        className="cq-btn"
+                        onClick={() => handleToggleSuspend(h)}
+                        style={{
+                          color: isSuspended ? "#16a34a" : "#d97706" ,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+
+  <Icon icon={isSuspended ? Play : PlayOff} size={20} />
+  <span>{isSuspended ? "Unsuspend" : "Suspend"}</span>
+                      </button>
+                      <button
+                        className="cq-btn"
+                        style={{ color: "#dc2626" }}
+                        onClick={() => handleDeleteHub(h)}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </span>
+              </div>
+            );
+          })}
       </div>
     </div>
   );
@@ -274,6 +468,7 @@ export function HubsPage() {
 export function HubDetail() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { isSuper } = useAuth();
   const hub = useDocument("hubs", id);
   const staff = useCollection("admins", undefined, id);
   const players = useCollection("players", undefined, id);
@@ -281,6 +476,7 @@ export function HubDetail() {
   const [msg, setMsg] = useState("");
   const [add, setAdd] = useState({ name: "", email: "", role: "owner" });
   const [res, setRes] = useState(null);
+
   useEffect(() => {
     if (hub && !f)
       setF({
@@ -296,8 +492,10 @@ export function HubDetail() {
         Loading… <Link to="/platform">Back to hubs</Link>
       </div>
     );
+
   const nameOf = (uid) =>
     (players.find((p) => p.uid === uid || p.id === uid) || {}).name || uid;
+
   const base = `${origin()}#/h/${id}`;
   const links = [
     ["Staff area", base],
@@ -313,6 +511,18 @@ export function HubDetail() {
     });
     setMsg("Saved.");
   };
+
+  const handleDeleteCurrentHub = async () => {
+    if (
+      window.confirm(
+        `Are you sure you want to PERMANENTLY DELETE "${hub.name}" (${id})? All settings and data for this hub will be deleted.`
+      )
+    ) {
+      await deleteHub(id);
+      nav("/platform");
+    }
+  };
+
   const addStaff = async () => {
     setRes(null);
     const r = await addHubStaff(id, add);
@@ -334,7 +544,7 @@ export function HubDetail() {
       </div>
 
       <div className="cq-card">
-        <h2>Hub settings</h2>
+        <h2>Hub settings & Status</h2>
         {f && (
           <>
             <div className="cq-row">
@@ -343,14 +553,16 @@ export function HubDetail() {
                 value={f.name}
                 onChange={(e) => setF({ ...f, name: e.target.value })}
                 aria-label="Hub name"
+                disabled={!isSuper}
               />
               <label className="cq-check">
                 <input
                   type="checkbox"
                   checked={f.active}
                   onChange={(e) => setF({ ...f, active: e.target.checked })}
+                  disabled={!isSuper}
                 />{" "}
-                Active (clients and staff can use it)
+                Active (Uncheck to suspend client & staff access)
               </label>
             </div>
             <div style={{ marginTop: 10 }}>
@@ -359,22 +571,32 @@ export function HubDetail() {
                 onChange={(theme) => setF({ ...f, theme })}
               />
             </div>
-            <div className="cq-row" style={{ marginTop: 12 }}>
-              <button className="primary" onClick={save}>
-                Save
-              </button>
-              {msg && (
-                <span role="status" className="cq-mut">
-                  {msg}
-                </span>
+            <div className="cq-row" style={{ marginTop: 12, justifyContent: "space-between" }}>
+              <div>
+                <button className="primary" onClick={save}>
+                  Save Settings
+                </button>
+                {msg && (
+                  <span role="status" className="cq-mut" style={{ marginLeft: "8px" }}>
+                    {msg}
+                  </span>
+                )}
+              </div>
+
+              {/* Danger Zone: Permanent Delete */}
+              {isSuper && (
+                <button
+                  type="button"
+                  className="small"
+                  style={{ color: "#dc2626", border: "1px solid #fecaca", background: "#fef2f2" }}
+                  onClick={handleDeleteCurrentHub}
+                >
+                  Delete Hub
+                </button>
               )}
             </div>
           </>
         )}
-        <div className="cq-mut" style={{ marginTop: 10 }}>
-          Only super admins can change a hub&apos;s name, theme or status. The
-          hub code ({id}) cannot be changed.
-        </div>
       </div>
 
       <div className="cq-card">
@@ -404,6 +626,7 @@ export function HubDetail() {
             <span>{nameOf(a.id)}</span>
             <span className="cq-row" style={{ flexWrap: "nowrap" }}>
               <select
+                className="cq-select-readable"
                 value={normalizeRole(a.role)}
                 onChange={(e) => setHubStaffRole(id, a.id, e.target.value)}
                 aria-label={`Role of ${nameOf(a.id)}`}
@@ -440,6 +663,7 @@ export function HubDetail() {
             onChange={(e) => setAdd({ ...add, email: e.target.value })}
           />
           <select
+            className="cq-select-readable"
             value={add.role}
             onChange={(e) => setAdd({ ...add, role: e.target.value })}
             aria-label="Role"
@@ -460,44 +684,24 @@ export function HubDetail() {
         </div>
         {res && res.ok && (
           <div role="status" className="cq-msg">
-            {res.name} added.{" "}
-            {res.created && (
-              <>
-                New account.{" "}
-                {res.emailed
-                  ? "A reset-password email was sent."
-                  : "The reset email could not be sent."}{" "}
-                Temporary password: <code>{res.password}</code> (shown once).
-              </>
-            )}
+            {res.name} added.
           </div>
         )}
-        {res && !res.ok && (
-          <div role="alert" className="cq-msg" style={{ color: "#c2255c" }}>
-            {res.error}
-          </div>
-        )}
-        <div className="cq-mut" style={{ marginTop: 8 }}>
-          Each hub&apos;s owner can add and manage their own staff on their
-          Users page. Super admins can open any hub as its owner.
-        </div>
       </div>
     </div>
   );
 }
 
 export function SuperAdminsPage() {
-  const { user } = useAuth();
-  const admins = useCollection("platformAdmins");
-  const users = useCollection("users");
+  const { user, isSuper } = useAuth();
+  const admins = useCollection("platformAdmins") || [];
+  const users = useCollection("users") || [];
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
-  const nameOf = (uid) => {
-    const u = users.find((x) => x.uid === uid || x.id === uid);
-    return u
-      ? `${u.name || u.email}${u.name && u.email ? ` · ${u.email}` : ""}`
-      : uid;
-  };
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const nameOf = (u) =>
+    `${u.name || u.email}${u.name && u.email ? ` · ${u.email}` : ""}`;
 
   const grant = async () => {
     const u = await findUserByEmail(email);
@@ -515,49 +719,77 @@ export function SuperAdminsPage() {
   return (
     <div className="cq">
       <div className="cq-head">
-        <h1>Super admins</h1>
+        <h1>{isSuper ? "Super & Group Admins" : "Group Admins"}</h1>
       </div>
-      <div className="cq-card">
-        <h2>Super admins ({admins.length})</h2>
-        {admins.map((a) => (
-          <div className="cq-item" key={a.id}>
-            <span>
-              {nameOf(a.id)}
-              {user && a.id === user.uid ? " (you)" : ""}
-            </span>
-            {user && a.id !== user.uid && admins.length > 1 && (
-              <button
-                className="small"
-                onClick={() =>
-                  window.confirm("Remove this super admin?") &&
-                  setSuperAdmin(a.id, false)
-                }
-              >
-                Remove
-              </button>
-            )}
+
+      {/* RESTRICTED: Only Platform Super Admins can see/grant Super Admin privileges */}
+      {isSuper && (
+        <div className="cq-card">
+          <h2>Super Admins ({admins.length})</h2>
+          {admins.map((a) => {
+            const u = users.find((x) => x.uid === a.id || x.id === a.id) || { uid: a.id };
+            return (
+              <div className="cq-item" key={a.id}>
+                <span>
+                  {u.name || u.email || a.id}
+                  {user && a.id === user.uid ? " (you)" : ""}
+                </span>
+                {user && a.id !== user.uid && admins.length > 1 && (
+                  <button
+                    className="small"
+                    onClick={() =>
+                      window.confirm("Remove this super admin?") &&
+                      setSuperAdmin(a.id, false)
+                    }
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <div className="cq-row" style={{ marginTop: 12 }}>
+            <input
+              type="text"
+              value={email}
+              placeholder="Email of an existing account"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button className="primary" disabled={!email.trim()} onClick={grant}>
+              Make super admin
+            </button>
           </div>
-        ))}
-        <div className="cq-row" style={{ marginTop: 12 }}>
-          <input
-            type="text"
-            value={email}
-            placeholder="Email of an existing account"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button className="primary" disabled={!email.trim()} onClick={grant}>
-            Make super admin
-          </button>
+          {msg && (
+            <div role="status" className="cq-msg">
+              {msg}
+            </div>
+          )}
         </div>
-        {msg && (
-          <div role="status" className="cq-msg">
-            {msg}
-          </div>
-        )}
-        <div className="cq-mut" style={{ marginTop: 10 }}>
-          Super admins create hubs, choose their themes and owners, and can open
-          any hub as its owner. Hub owners and their staff never see other hubs.
+      )}
+
+      {/* ACCESSIBLE TO SUPER & GROUP ADMINS: Assign hub scopes to users */}
+      <div className="cq-card" style={{ marginTop: 16 }}>
+        <h2>Manage User Hub Assignments (Group Admins)</h2>
+        <div className="cq-mut" style={{ marginBottom: 12 }}>
+          Select a user below to assign specific hubs they are permitted to manage:
         </div>
+        <select
+          className="cq-select-readable"
+          value={selectedUser?.uid || ""}
+          onChange={(e) => {
+            const u = users.find((x) => (x.uid || x.id) === e.target.value);
+            setSelectedUser(u || null);
+          }}
+        >
+          <option value="">-- Choose User to Assign Hubs --</option>
+          {users.map((u) => (
+            <option key={u.uid || u.id} value={u.uid || u.id}>
+              {nameOf(u)}
+            </option>
+          ))}
+        </select>
+
+        {selectedUser && <HubAssignmentManager user={selectedUser} />}
       </div>
     </div>
   );

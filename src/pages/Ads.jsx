@@ -6,18 +6,18 @@ import VoicePicker from "../components/VoicePicker.jsx";
 import { useSpeech } from "../speech/useSpeech.js";
 import { uploadHubMedia } from "../data/storage.js";
 
-import { useAuth } from "../data/hooks.js"; 
+import { useAuth } from "../data/hooks.js";
 const TYPE_LABEL = { video: "Video", youtube: "YouTube", image: "Image" };
 
 export default function AdsPage() {
   const hh = useHubHref();
-  const { hub } = useAuth();
+  const { hub, role } = useAuth();
   const [s, update] = useCourtStore();
   const set = (patch) => update((x) => ({ ...x, ...patch }));
   const setSpeech = (patch) =>
     update((x) => ({ ...x, speech: { ...x.speech, ...patch } }));
   const { speak, unlock } = useSpeech(s.speech);
-  
+
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [seconds, setSeconds] = useState(15);
@@ -56,35 +56,7 @@ export default function AdsPage() {
     }
   };
 
-  // Handles direct local video/image file uploads per Hub
-  // const handleFileUpload = (e) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-
-  //   setUploading(true);
-  //   const reader = new FileReader();
-
-  //   reader.onload = (event) => {
-  //     const fileDataUrl = event.target.result;
-  //     const fileType = file.type.startsWith("video/")
-  //       ? "video"
-  //       : file.type.startsWith("image/")
-  //       ? "image"
-  //       : detectAdType(file.name);
-
-  //     addAd(fileDataUrl, file.name, fileType);
-  //     setUploading(false);
-  //     e.target.value = ""; // reset file input
-  //   };
-
-  //   reader.onerror = () => {
-  //     alert("Failed to read file.");
-  //     setUploading(false);
-  //   };
-
-  //   reader.readAsDataURL(file);
-  // };
-const handleFileUpload = async (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !hub?.id) return;
 
@@ -99,7 +71,7 @@ const handleFileUpload = async (e) => {
       });
 
       setUrl(downloadUrl);
-      setMsg('media uploaded! You can now add it to the ad playlist.');
+      setMsg("media uploaded! You can now add it to the ad playlist.");
     } catch (err) {
       console.error("Storage upload error:", err);
       setMsg("Failed to upload media file.");
@@ -124,6 +96,7 @@ const handleFileUpload = async (e) => {
     setText("");
   };
 
+  const isStoreRole = typeof role === "string" && role.startsWith("store_");
   return (
     <div className="cq">
       <div className="cq-head">
@@ -132,16 +105,9 @@ const handleFileUpload = async (e) => {
           Open TV display
         </a>
       </div>
-<div className="cq-card">
+      <div className="cq-card">
         <h2>TV layout</h2>
-        {/* <div className="cq-row">
-          <input
-            type="text"
-            value={s.club || ""}
-            placeholder="Header title (e.g. your club name)"
-            onChange={(e) => set({ club: e.target.value })}
-          />
-        </div> */}
+
         <div className="cq-row" style={{ marginTop: 10 }}>
           <label className="cq-check">
             <input
@@ -175,7 +141,7 @@ const handleFileUpload = async (e) => {
             />{" "}
             Play ad sound
           </label>
-          
+
           <select
             value={s.adsPct || 30}
             onChange={(e) => set({ adsPct: +e.target.value })}
@@ -207,32 +173,38 @@ const handleFileUpload = async (e) => {
           right, and scrolling announcements at the bottom.
         </div>
       </div>
-
-      <div className="cq-card">
-        <h2>Voice &amp; ad volume</h2>
-        <VoicePicker
-          speech={s.speech}
-          onChange={setSpeech}
-          speakHere={(t) => {
-            unlock();
-            speak(t);
-          }}
-          speakOnTv={(t) =>
-            update((x) => ({
-              ...x,
-              ev: { id: Date.now(), type: "say", text: t },
-            }))
-          }
-        />
-      </div>
-
+      {!isStoreRole && (
+        <div className="cq-card">
+          <h2>Voice &amp; Ad volume</h2>
+          <VoicePicker
+            speech={s.speech}
+            onChange={setSpeech}
+            speakHere={(t) => {
+              unlock();
+              speak(t);
+            }}
+            speakOnTv={(t) =>
+              update((x) => ({
+                ...x,
+                ev: { id: Date.now(), type: "say", text: t },
+              }))
+            }
+          />
+        </div>
+      )}
       <div className="cq-card">
         <h2>Ad playlist ({ads.length})</h2>
 
         {/* Upload Local Media File */}
         <div className="cq-row" style={{ marginBottom: 15 }}>
-          <label className="cq-btn" style={{ cursor: "pointer", display: "inline-block" }}>
-            📁 {uploading ? "Processing video..." : "Upload Local Video or Image File"}
+          <label
+            className="cq-btn"
+            style={{ cursor: "pointer", display: "inline-block" }}
+          >
+            📁{" "}
+            {uploading
+              ? "Processing video..."
+              : "Upload Local Video or Image File"}
             <input
               type="file"
               accept="video/*,image/*"
@@ -241,7 +213,9 @@ const handleFileUpload = async (e) => {
               disabled={uploading}
             />
           </label>
-          <span className="cq-mut">Uploaded videos/images are stored and displayed for this Hub only.</span>
+          <span className="cq-mut">
+            Uploaded videos/images are stored and displayed for this Hub only.
+          </span>
         </div>
 
         {/* Or Paste Direct Web Link */}
@@ -271,14 +245,19 @@ const handleFileUpload = async (e) => {
               style={{ width: 70 }}
             />
           </label>
-          <button className="primary" onClick={() => addAd()} disabled={!url.trim()}>
+          <button
+            className="primary"
+            onClick={() => addAd()}
+            disabled={!url.trim()}
+          >
             Add URL
           </button>
         </div>
 
         {ads.length === 0 && (
           <div className="cq-mut" style={{ marginTop: 10 }}>
-            No ads yet for this hub. The TV shows the courts full width until you add one.
+            No ads yet for this hub. The TV shows the courts full width until
+            you add one.
           </div>
         )}
 
@@ -286,7 +265,10 @@ const handleFileUpload = async (e) => {
           <div className="cq-item" key={a.id}>
             <span>
               <span className="cq-mut">{i + 1}&nbsp;&nbsp;</span>
-              <b>{a.title || (a.url.length > 40 ? `${a.url.slice(0, 40)}...` : a.url)}</b>
+              <b>
+                {a.title ||
+                  (a.url.length > 40 ? `${a.url.slice(0, 40)}...` : a.url)}
+              </b>
               <span className="cq-mut">
                 {" "}
                 · {TYPE_LABEL[a.type] || "Media"}

@@ -177,17 +177,47 @@ export function TvPage() {
                     <span>Random draw of 4 players</span>
                   ) : groups.length ? (
                     groups.map((g, i) => (
-                      <span key={i}>
-                        <b>
-                          {freeCourts[i]
-                            ? `Court ${freeCourts[i].n}`
-                            : i === freeCourts.length
-                            ? "Next available court"
-                            : `After that`}
-                          :
-                        </b>{" "}
+                      <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "1.25rem",
+                        padding: "1rem 1.5rem",
+                        margin: "0.75rem 0",
+                        background: "rgba(255, 255, 255, 0.08)",
+                        border: "2px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "14px",
+                        fontSize: "clamp(1.5rem, 2.2vw, 2.75rem)",
+                        lineHeight: "1.2",
+                        color: "#ffffff",
+                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: freeCourts[i] ? "#4f46e5" : "#3b82f6",
+                          color: "#ffffff",
+                          padding: "0.4rem 1rem",
+                          borderRadius: "8px",
+                          fontWeight: "800",
+                          letterSpacing: "0.02em",
+                          whiteSpace: "nowrap",
+                          textTransform: "uppercase",
+                          fontSize: "clamp(1.4rem, 2vw, 2.4rem)",
+                        }}
+                      >
+                        {freeCourts[i]
+                          ? `Court ${freeCourts[i].n}`
+                          : i === freeCourts.length
+                          ? "Next Available Court"
+                          : "After That"}
+                      </span>
+                    
+                      <span style={{ fontWeight: "700", color: "#f8fafc", wordBreak: "break-word" }}>
                         {g.join(" · ")}
                       </span>
+                    </div>
                     ))
                   ) : (
                     <span>—</span>

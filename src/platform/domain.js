@@ -133,3 +133,34 @@ export const updateHub = (id, patch) => data.setDoc('hubs', id, patch, { merge: 
 export const setHubStaffRole = (hubId, uid, role) => data.forHub(hubId).setDoc('admins', uid, { role, ts: Date.now() });
 export const removeHubStaff = (hubId, uid) => data.forHub(hubId).deleteDoc('admins', uid);
 export const setSuperAdmin = (uid, on) => (on ? data.setDoc('platformAdmins', uid, { ts: Date.now() }) : data.deleteDoc('platformAdmins', uid));
+export function applyTheme(themeName) {
+  if (themeName) {
+    document.documentElement.setAttribute("data-cq-theme", themeName);
+  }
+}
+
+/**
+ * Update active status of a hub (Suspend / Restore)
+ */
+export async function setHubActive(hubId, active) {
+  try {
+    await data.setDoc("hubs", hubId, { active }, { merge: true });
+    return { ok: true };
+  } catch (err) {
+    console.error("Failed to toggle hub status:", err);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Permanently delete a hub document from Firestore
+ */
+export async function deleteHub(hubId) {
+  try {
+    await data.deleteDoc("hubs", hubId);
+    return { ok: true };
+  } catch (err) {
+    console.error("Failed to delete hub:", err);
+    return { ok: false, error: err.message };
+  }
+}

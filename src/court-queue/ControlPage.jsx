@@ -27,7 +27,9 @@ import { useCollection } from "../data/hooks.js";
 import { useState } from "react";
 import GameTimer from "./GameTimer.jsx";
 import { levelNum, playerLevel } from "../data/levels.js";
-
+import Icon
+ from "../components/Icon.jsx"; 
+ import { HelpCircle, ListPlus, ListRestart, Megaphone, Shuffle, UsersCollaboration } from "lucide-react";
 export function ControlPage() {
   const hh = useHubHref(); // eslint-disable-line no-unused-vars
   const [s, update] = useCourtStore();
@@ -140,7 +142,8 @@ export function ControlPage() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addPlayers()}
           />
-          <button className="primary" onClick={() => addPlayers()}>
+          <button className="primary" onClick={() => addPlayers()} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              <Icon icon={ListPlus} size={20} />
             Add
           </button>
           <label className="cq-check">
@@ -266,7 +269,8 @@ export function ControlPage() {
               setPa("");
               setPb("");
             }}
-          >
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+            <Icon icon={UsersCollaboration} size={20} />
             Pair up
           </button>
         </div>
@@ -383,7 +387,8 @@ export function ControlPage() {
                           !nextUp || (s.mode !== "rand" && c.n !== firstFree)
                         }
                         onClick={() => update((x) => callMatch(x, i))}
-                      >
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Icon icon={Megaphone} size={20} />
                         Call match
                       </button>
                     </div>
@@ -452,7 +457,8 @@ export function ControlPage() {
                 Winners with winners, losers with losers
               </option>
             </select>
-            <button onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))}>
+            <button onClick={() => update((x) => ({ ...x, q: shuffle(x.q) }))} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Icon icon={Shuffle} size={20} />
               Shuffle list
             </button>
             <button
@@ -464,7 +470,8 @@ export function ControlPage() {
                   ev: null,
                 }))
               }
-            >
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              <Icon icon={ListRestart} size={20} />
               Reset all
             </button>
           </div>

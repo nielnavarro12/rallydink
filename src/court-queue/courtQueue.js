@@ -25,7 +25,7 @@ export const CLOSE_MIN = 29 * 60; // last possible end; above 24*60 means after 
 export const SLOT = 30; // minutes per booking slot
 const DAY_MIN = 24 * 60;
 const TEAM_SIZE = 4; // players needed for one match
-export const VIEW_MS = { courts: 5000, schedule: 5000, stats: 25000 }; // how long each TV screen stays
+export const VIEW_MS = { courts: 40000, schedule: 10000, stats: 10000 }; // how long each TV screen stays
 export const AUTO_CALL_DELAY = 8500; // let the congratulations screen finish first
 
 /* ---------- persistence ---------- */

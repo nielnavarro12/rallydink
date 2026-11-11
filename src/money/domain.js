@@ -3,7 +3,7 @@ import { newId } from '../data/ids.js';
 import { todayStr } from '../court-queue/courtQueue.js';
 
 /* POS, inventory and payments. Income is always computed from the `sales` records:
-   sale = { ts, date, lines: [{ cat: 'rental' | 'openplay' | 'product', id, name, price, qty }], total, method, ref, note, void }
+   sale = { ts, date, lines: [{ cat: 'rental' | 'openplay' | 'product', id, name, price, qty }], total, method, ref, void }
    `ref` links a payment to a booking id (rental) or a signup id (open play). */
 const who = (user) => ({ by: user.uid, byName: user.name || user.email || 'staff' });
 const round = (n) => Math.round(n * 100) / 100;
@@ -36,13 +36,28 @@ export async function changeStock(user, productId, { delta, setTo, reason }) {
 }
 
 /* ----- POS checkout: stock check, stock update, stock history and the sale in one transaction ----- */
-export async function checkout(user, lines, { method, tendered, note } = {}) {
+export async function checkout(
+  user,
+  lines,
+  { method, tendered, note, grossAmount, itemDiscountsTotal = 0, cartDiscount = {}, discount = 0, total } = {}
+) {
   const clean = lines.filter((l) => l.qty > 0);
   if (!clean.length) return { ok: false, error: 'The cart is empty.' };
-  const total = round(clean.reduce((n, l) => n + l.price * l.qty, 0));
+
+  // Original gross sum before discount if not explicitly passed
+  const calculatedGross = round(clean.reduce((n, l) => n + Number(l.price) * l.qty, 0));
+  const finalGross = Number(grossAmount) != null ? round(Number(grossAmount)) : calculatedGross;
+  
+  // Total overall discount
+  const finalDiscount = round(Number(discount) || 0);
+  
+  // Final net total amount after discount
+  const finalTotal = round(Number(total) != null ? Number(total) : Math.max(0, finalGross - finalDiscount));
+
   const saleId = newId();
   const need = {};
   clean.forEach((l) => { if (l.cat === 'product') need[l.id] = (need[l.id] || 0) + l.qty; });
+  
   try {
     await data.transaction(async (tx) => {
       const prods = {};
@@ -59,12 +74,43 @@ export async function checkout(user, lines, { method, tendered, note } = {}) {
         tx.set('products', id, { ...p, stock: after, updatedAt: Date.now() });
         tx.set('stockLog', newId(), { productId: id, name: p.name, delta: -need[id], after, reason: 'sale', ref: saleId, ts: Date.now(), ...who(user) });
       });
+
+      // Structure line items with full discount metadata
+      const formattedLines = clean.map((l) => ({
+        cat: l.cat,
+        id: l.id || '',
+        name: l.name,
+        price: Number(l.price),
+        qty: l.qty,
+        discountType: l.discountType || 'amount',
+        discountValue: Number(l.discountValue) || 0,
+        unitPriceAfterDiscount: Number(l.unitPriceAfterDiscount) != null ? Number(l.unitPriceAfterDiscount) : Number(l.price),
+        lineDiscountAmount: Number(l.lineDiscountAmount) || 0,
+        originalLineTotal: Number(l.originalLineTotal) != null ? Number(l.originalLineTotal) : round(Number(l.price) * l.qty),
+        discountedLineTotal: Number(l.discountedLineTotal) != null ? Number(l.discountedLineTotal) : round((Number(l.unitPriceAfterDiscount) || Number(l.price)) * l.qty),
+      }));
+
       tx.set('sales', saleId, {
-        ts: Date.now(), date: todayStr(), method: method || 'Cash', tendered: Number(tendered) || 0, note: note || '', ref: '',
-        lines: clean.map((l) => ({ cat: l.cat, id: l.id || '', name: l.name, price: Number(l.price), qty: l.qty })), total, ...who(user),
+        ts: Date.now(),
+        date: todayStr(),
+        method: method || 'Cash',
+        tendered: Number(tendered) || 0,
+        note: note || '',
+        ref: '',
+        lines: formattedLines,
+        grossAmount: finalGross,
+        itemDiscountsTotal: round(Number(itemDiscountsTotal) || 0),
+        cartDiscount: {
+          type: cartDiscount.type || 'amount',
+          value: Number(cartDiscount.value) || 0,
+          amount: round(Number(cartDiscount.amount) || 0),
+        },
+        discount: finalDiscount,
+        total: finalTotal,
+        ...who(user),
       });
     });
-    return { ok: true, id: saleId, total };
+    return { ok: true, id: saleId, total: finalTotal };
   } catch (e) {
     const m = (e && e.message) || '';
     if (m.startsWith('stock:')) return { ok: false, error: `Not enough stock for ${m.slice(6)}.` };
@@ -74,12 +120,24 @@ export async function checkout(user, lines, { method, tendered, note } = {}) {
 }
 
 /* ----- payments for a booking or an open play sign-up ----- */
-export async function recordPayment(user, { cat, name, amount, method, ref, note }) {
+export async function recordPayment(user, { cat, name, discount = 0, amount, method, ref, note }) {
   const id = newId();
   const total = round(Number(amount) || 0);
+  const discountVal = round(Number(discount) || 0);
+  const grossAmount = round(total + discountVal);
+
   await data.setDoc('sales', id, {
-    ts: Date.now(), date: todayStr(), method: method || 'Cash', tendered: 0, note: note || '', ref: ref || '',
-    lines: [{ cat, id: '', name, price: total, qty: 1 }], total, ...who(user),
+    ts: Date.now(),
+    date: todayStr(),
+    method: method || 'Cash',
+    tendered: 0,
+    note: note || '',
+    ref: ref || '',
+    grossAmount,
+    discount: discountVal,
+    lines: [{ cat, id: '', name, price: grossAmount, qty: 1 }],
+    total,
+    ...who(user),
   });
   return id;
 }

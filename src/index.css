@@ -323,3 +323,217 @@ select option:checked {
   border-color: rgba(239, 68, 68, 0.4);
 }
 */
+/* =====================================================================
+   SIDEBAR & RESPONSIVE DRAWER FIXES
+   ===================================================================== */
+
+/* Base Link Layout */
+.cq-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  color: var(--tx, #eaf0ff);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.cq-sidebar-icon {
+  flex-shrink: 0;
+}
+
+.cq-sidebar-divider {
+  margin: 0.5rem 0;
+  border-top: 1px solid var(--bd, rgba(255, 255, 255, 0.12));
+}
+
+.cq-sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Base Drawer Header (Hidden on Desktop) */
+.cq-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bd, rgba(255, 255, 255, 0.15));
+}
+
+.cq-sidebar-brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--tx, #ffffff);
+  letter-spacing: 0.5px;
+}
+
+.cq-sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cq-sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cq-sidebar-burger {
+  display: none !important;
+}
+
+@media (min-width: 769px) {
+  .cq-sidebar-header {
+    display: none;
+  }
+}
+/* Mobile Media Query (<= 768px) */
+@media (max-width: 768px) {
+  /* Prevent layout container from creating a trap */
+  .cq-layout-container {
+    backdrop-filter: none !important;
+    transform: none !important;
+  }
+  .cq-sidebar-burger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: fixed !important;
+    top: 12px !important;
+    right: 14px !important;
+    z-index: 99999 !important;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: var(--card, rgba(15, 22, 36, 0.95)) !important;
+    border: 1px solid var(--bd, rgba(255, 255, 255, 0.25)) !important;
+    color: var(--tx, #ffffff) !important;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .cq-sidebar-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998 !important;
+  }
+
+  .cq-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+    width: 260px;
+    background: #0d1322 !important;
+    border-right: 1px solid var(--bd, rgba(255, 255, 255, 0.18));
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cq-sidebar.open {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Sidebar Inner Layout Flex distribution */
+.cq-sidebar-in {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.cq-sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-grow: 1;
+}
+
+/* Sidebar Footer & User Profile Widget */
+.cq-sidebar-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bd, rgba(255, 255, 255, 0.12));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cq-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bd, rgba(255, 255, 255, 0.08));
+}
+
+.cq-sidebar-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background:  rgba(92, 209, 255, 0.25);
+  color: "#ffffff";
+  flex-shrink: 0;
+}
+
+.cq-sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cq-sidebar-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color:(#ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cq-sidebar-user-role {
+  font-size: 0.725rem;
+  color: var(--mut, #a8b6dc);
+  text-transform: capitalize;
+}
+
+/* =====================================================================
+   UNIVERSAL SELECT & DROPDOWN READABILITY OVERRIDE
+   ===================================================================== */
+
+/* Force all select dropdown triggers to be dark charcoal with crisp white text */
+/* Scoped readable select control */
+.cq-select-readable {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #374151 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+.cq-select-readable option {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  padding: 10px !important;
+}

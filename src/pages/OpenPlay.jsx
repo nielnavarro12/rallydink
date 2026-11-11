@@ -17,7 +17,8 @@ import { recordPayment, voidSale } from "../money/domain.js";
 import { daysAgo } from "../money/dates.js";
 import { fmtMoney, sessionFee, useSettings } from "../money/pricing.js";
 import { levelNum } from "../data/levels.js";
-
+import { HelpCircle, LayersPlus } from "lucide-react";
+import Icon from "../components/Icon.jsx";
 const addDays = (iso, n) => {
   const [y, m, d] = iso.split("-").map(Number);
   const t = new Date(y, m - 1, d + n);
@@ -288,7 +289,8 @@ export default function OpenPlayPage() {
               className="primary"
               disabled={!valid}
               onClick={editing ? saveEdit : add}
-            >
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              <Icon icon={LayersPlus} size={20} />
               {editing ? "Save changes" : "Add session"}
             </button>
             {editing && <button onClick={cancelEdit}>Cancel</button>}

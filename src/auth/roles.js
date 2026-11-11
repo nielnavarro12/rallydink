@@ -19,12 +19,27 @@ export const ROLES = {
   cashier: {
     label: 'Cashier',
     desc: 'POS and collecting rental and open play payments',
-    perms: ['pos', 'bookings'],
+    perms: ['pos','inventory',  'bookings'],
   },
   queue: {
     label: 'Queue master',
     desc: 'Runs the queue and sees the stats',
     perms: ['queue'],
+  },
+  store_owner: {
+    label: 'Store Owner',
+    desc: 'Everything, including staff accounts and rates',
+    perms: ['pos', 'inventory', 'income', 'refund', 'tv', 'settings', 'staff'],
+  },
+  store_manager: {
+    label: 'Store Manager',
+    desc: 'Everything except staff accounts',
+    perms: ['pos', 'inventory', 'income', 'refund', 'tv', 'settings'],
+  },
+  store_cashier: {
+    label: 'Store Cashier',
+    desc: 'POS',
+    perms: ['pos','inventory'],
   },
 };
 

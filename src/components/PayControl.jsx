@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { METHODS } from "../money/pricing.js";
-
+import { BanknoteCheck } from "lucide-react";
+import Icon from "./Icon.jsx";
 /* amount + payment method + "Mark paid". onPay({ amount, method }) */
 export default function PayControl({ amount, onPay, label = "Mark paid" }) {
   const [amt, setAmt] = useState(amount);
@@ -36,7 +37,8 @@ export default function PayControl({ amount, onPay, label = "Mark paid" }) {
           await onPay({ amount: Number(amt), method });
           setBusy(false);
         }}
-      >
+        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+        <Icon icon={BanknoteCheck} size={20} />
         {label}
       </button>
     </span>

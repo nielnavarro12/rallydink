@@ -9,7 +9,8 @@ import { recordPayment, voidSale } from '../money/domain.js';
 import { daysAgo } from '../money/dates.js';
 import { fmtMoney, rentalPrice, useSettings } from '../money/pricing.js';
 import { bookCourt, cancelBooking } from '../data/domain.js';
-
+import { ListRestart } from 'lucide-react';
+import Icon from '../components/Icon.jsx';
 export default function RentalsPage() {
   const { user, can } = useAuth();
   const [s] = useCourtStore({ readOnly: true });
@@ -75,7 +76,8 @@ export default function RentalsPage() {
         ))}
         {past.length > 0 && (
           <div style={{ marginTop: 10 }}>
-            <button className="small" onClick={() => past.forEach((b) => cancelBooking(b))}>Clear {past.length} past rental{past.length > 1 ? 's' : ''}</button>
+            <button className="small" onClick={() => past.forEach((b) => cancelBooking(b))} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Icon icon={ListRestart} size={20} />Clear {past.length} past rental{past.length > 1 ? 's' : ''}</button>
           </div>
         )}
       </div>

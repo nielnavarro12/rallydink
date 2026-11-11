@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { data } from "../data/index.js";
 import { Link } from "../hub/links.jsx";
 import { useAuth } from "../data/hooks.js";
@@ -7,6 +7,8 @@ import { useCourtStore } from "../court-queue/useCourtStore.js";
 import { resizeCourts } from "../court-queue/courtQueue.js";
 import { DEFAULT_SETTINGS, useSettings } from "../money/pricing.js";
 import { uploadHubMedia } from "../data/storage.js"; // Adjust this import path to where your uploadHubMedia file lives
+import { ThemePickerSetting } from "../components/ThemePickerSetting.jsx";
+import { applyTheme } from "../platform/domain.js";
 
 const COURT_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
 
@@ -29,7 +31,11 @@ export default function AccountPage() {
     if (
       removed.length &&
       !window.confirm(
-        `Court ${removed.map((c) => c.n).join(", ")} has a match in progress. Its players go back to the queue. Continue?`,
+        `Court ${removed
+          .map((c) => c.n)
+          .join(
+            ", "
+          )} has a match in progress. Its players go back to the queue. Continue?`
       )
     )
       return;
@@ -65,7 +71,7 @@ export default function AccountPage() {
         "hubs",
         hub.id,
         { logoUrl: logoUrl.trim() },
-        { merge: true },
+        { merge: true }
       );
       setMsg("Hub logo updated successfully!");
       setTimeout(() => setMsg(""), 4000);
@@ -110,7 +116,7 @@ export default function AccountPage() {
         "hubs",
         hub.id,
         { bannerUrl: bannerUrl.trim() },
-        { merge: true },
+        { merge: true }
       );
       setBannerMsg("Hub banner updated successfully!");
       setTimeout(() => setBannerMsg(""), 4000);
@@ -145,32 +151,42 @@ export default function AccountPage() {
       setBannerSaving(false);
     }
   };
+  const [selectedTheme, setSelectedTheme] = useState(hub?.theme || "candy");
+  const [themeSaving, setThemeSaving] = useState(false);
+  const [themeMsg, setThemeMsg] = useState("");
 
+  // Sync with hub data when loaded
+  useEffect(() => {
+    if (hub?.theme) setSelectedTheme(hub.theme);
+  }, [hub?.theme]);
+
+  const handleSaveTheme = async () => {
+    if (!hub?.id) return;
+    setThemeSaving(true);
+    try {
+      await data.setDoc(
+        "hubs",
+        hub.id,
+        { theme: selectedTheme },
+        { merge: true }
+      );
+      setThemeMsg("Theme updated successfully!");
+      setTimeout(() => setThemeMsg(""), 4000);
+    } catch (err) {
+      console.error("Theme update error:", err);
+      setThemeMsg("Failed to update theme.");
+    } finally {
+      setThemeSaving(false);
+    }
+  };
+  const isStoreRole = typeof role === "string" && role.startsWith("store_");
   return (
     <div className="cq">
       <div className="cq-head">
         <h1>Settings</h1>
       </div>
 
-      {mode === "firebase" && user && (
-        <div className="cq-card">
-          <h2>Your account</h2>
-          <div>
-            {user.name || user.email} ·{" "}
-            {ROLES[role] ? ROLES[role].label : "no role"}
-          </div>
-          <div className="cq-mut" style={{ marginTop: 6 }}>
-            {ROLES[role]
-              ? ROLES[role].desc
-              : "Ask an owner to give you a role."}
-          </div>
-          <div style={{ marginTop: 10 }}>
-            <button onClick={() => data.auth.signOut()}>Sign out</button>
-          </div>
-        </div>
-      )}
-
-      {can("settings") && (
+      {!isStoreRole && can("settings") && (
         <div className="cq-card">
           <h2>Courts</h2>
           <div className="cq-row">
@@ -184,7 +200,7 @@ export default function AccountPage() {
                 {COURT_COUNTS.concat(
                   COURT_COUNTS.includes(s.courts.length)
                     ? []
-                    : [s.courts.length],
+                    : [s.courts.length]
                 )
                   .sort((a, b) => a - b)
                   .map((n) => (
@@ -208,7 +224,7 @@ export default function AccountPage() {
         </div>
       )}
 
-      {can("settings") && (
+      {!isStoreRole && can("settings") && (
         <div className="cq-card">
           <h2>Rates</h2>
           <div className="cq-row">
@@ -279,28 +295,13 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* <div className="cq-card">
-        <h2>Database</h2>
-        {mode === "firebase" ? (
-          <div>
-            Connected to <b>Firebase</b>: data is saved in Firestore and shared
-            by every device. Login is required.
-          </div>
-        ) : (
-          <div className="cq-mut">
-            <b style={{ color: "var(--tx)" }}>Local mode:</b> Firebase is not
-            set up, so data is saved only in this browser and there is no login
-            or staff roles. To save to a real database with login and the client
-            booking page, paste your Firebase config into
-            <code> src/sync/firebaseConfig.js</code> (see the README).
-          </div>
-        )}
-      </div> */}
-
       {can("staff") && (
         <div className="cq-card">
-    
-          <h2>Custom Hub Branding</h2>
+          {!isStoreRole ? (
+            <h2>Custom Hub Branding</h2>
+          ) : (
+            <h2>Store Branding</h2>
+          )}
           <div
             className="cq-row"
             style={{
@@ -415,6 +416,17 @@ export default function AccountPage() {
           </div>
         </div>
       )}
+
+<div className="cq-card">
+  <h2>Theme Selector</h2>
+  <ThemePickerSetting
+    value={hub?.theme || "candy"}
+    onChange={async (theme) => {
+      applyTheme(theme);
+      await data.setDoc("hubs", hub.id, { theme }, { merge: true });
+    }}
+  />
+</div>
     </div>
   );
 }

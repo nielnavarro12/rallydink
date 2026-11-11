@@ -1,19 +1,24 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
-import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
 
 function Layout() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-      {/* Fixed Top Section */}
-      <div style={{ flexShrink: 0, zIndex: 20 }}>
-        <Header />
-        <Navbar />
-      </div>
+    <div style={{ display: "flex", height: "100vh", width: "100vw", overflow: "hidden" }}>
+      {/* Sidebar mounts desktop nav in-place and portals mobile drawer to body */}
+      <Sidebar />
 
-      {/* Scrollable Content Area */}
-      <div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0, zIndex: 10 }}>
-        <Outlet />
+      {/* Main App Container */}
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
+        {/* Top Header */}
+        <div style={{ flexShrink: 0 }}>
+          <Header />
+        </div>
+
+        {/* Main Scrollable View */}
+        <main style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
+          <Outlet />
+        </main>
       </div>
     </div>
   );

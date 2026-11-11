@@ -1,5 +1,4 @@
 import { useAuth } from "./data/hooks.js";
-import { data } from "./data/index.js";
 
 const Header = () => {
   const { hub } = useAuth();
@@ -30,22 +29,7 @@ const Header = () => {
           {hub?.name || "Drive n Dink"}
         </h1>
       </div>
-
-      {/* Sign Out Link (Right aligned) */}
-
-      <div>
-      <div className="logout-links">
-        <a
-          href="#logout"
-          onClick={(e) => {
-            e.preventDefault();
-            data.auth.signOut();
-          }}
-        >Sign out
-        </a>
-      </div>
-      
-      </div>
+   
     </header>
   );
 };

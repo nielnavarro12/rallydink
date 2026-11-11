@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { CLOSE_MIN, OPEN_MIN, fmtDate, fmtTime, nowMin, toHHMM, toMin, todayStr, useClockTick } from '../court-queue/courtQueue.js';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { CalendarPlus, LogIn } from 'lucide-react';
+import Icon from './Icon.jsx';
 
 const SLOT_INTERVAL = 60;
 const SLOTS = Array.from({ length: (CLOSE_MIN - OPEN_MIN) / SLOT_INTERVAL }, (_, i) => OPEN_MIN + i * SLOT_INTERVAL);
@@ -232,11 +234,13 @@ export default function BookingPicker({
           />
         )}
         {!name ? (
-          <button className="primary" onClick={() => navigate(`${location.pathname}/login`)}>
+          <button className="primary" onClick={() => navigate(`${location.pathname}/login`)}  style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+          <Icon icon={LogIn} size={20} />
             Log in to book a court
           </button>
         ) : (
-          <button className="primary" disabled={!sel || !name.trim() || busy} onClick={book}>
+          <button className="primary" disabled={!sel || !name.trim() || busy} onClick={book}  style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+          <Icon icon={CalendarPlus} size={20} />
             {busy ? 'Booking…' : 'Book court'}
           </button>
         )}

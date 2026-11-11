@@ -5,7 +5,7 @@ import { METHODS, fmtMoney, useSettings } from '../money/pricing.js';
 
 /* Point of sale: tap products, take payment, stock goes down automatically */
 export default function PosPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const st = useSettings();
   const money = (n) => fmtMoney(n, st.currency);
   const products = useCollection('products').filter((p) => p.active !== false);
@@ -26,6 +26,9 @@ export default function PosPage() {
     .sort((a, b) => a.name.localeCompare(b.name));
   const inCart = (key) => (cart.find((l) => l.key === key) || {}).qty || 0;
 
+  // 1. Gross original amount (before any item or cart discounts)
+  const grossAmount = Math.round(cart.reduce((n, l) => n + (l.price * l.qty), 0) * 100) / 100;
+  const isStoreRole = typeof role === 'string' && role.startsWith('store_');
   // Helper to calculate discounted unit price for an item
   const getItemUnitPrice = (l) => {
     const val = Math.max(0, Number(l.discountValue) || 0);
@@ -37,19 +40,26 @@ export default function PosPage() {
   };
 
   // Subtotal of all items after per-item discounts
-  const subtotal = Math.round(cart.reduce((n, l) => n + getItemUnitPrice(l) * l.qty, 0) * 100) / 100;
+  const subtotalAfterItemDiscounts = Math.round(cart.reduce((n, l) => n + getItemUnitPrice(l) * l.qty, 0) * 100) / 100;
+  
+  // Total sum of all per-item discounts
+  const itemDiscountsTotal = Math.round((grossAmount - subtotalAfterItemDiscounts) * 100) / 100;
 
   // Calculate cart-level discount amount
   const cartDiscountAmount = (() => {
     const val = Math.max(0, Number(cartDiscountValue) || 0);
     if (cartDiscountType === 'percent') {
       const pct = Math.min(100, val);
-      return Math.round(subtotal * (pct / 100) * 100) / 100;
+      return Math.round(subtotalAfterItemDiscounts * (pct / 100) * 100) / 100;
     }
-    return Math.min(subtotal, val);
+    return Math.min(subtotalAfterItemDiscounts, val);
   })();
 
-  const total = Math.max(0, Math.round((subtotal - cartDiscountAmount) * 100) / 100);
+  // 2. Total discount combined (Item discounts + Cart discount)
+  const totalDiscount = Math.round((itemDiscountsTotal + cartDiscountAmount) * 100) / 100;
+
+  // 3. Net total amount after all discounts
+  const total = Math.max(0, Math.round((grossAmount - totalDiscount) * 100) / 100);
   const change = Number(tendered) - total;
 
   const add = (line, max) => {
@@ -77,18 +87,28 @@ export default function PosPage() {
     setBusy(true);
 
     // Pass detailed discount metadata into checkout payload
-    const payloadCart = cart.map((l) => ({
-      ...l,
-      unitPriceAfterDiscount: getItemUnitPrice(l),
-    }));
+    const payloadCart = cart.map((l) => {
+      const unitPriceAfterDiscount = getItemUnitPrice(l);
+      const originalLineTotal = l.price * l.qty;
+      const discountedLineTotal = unitPriceAfterDiscount * l.qty;
+      return {
+        ...l,
+        originalLineTotal,
+        discountedLineTotal,
+        lineDiscountAmount: Math.round((originalLineTotal - discountedLineTotal) * 100) / 100,
+        unitPriceAfterDiscount,
+      };
+    });
 
     const r = await checkout(user, payloadCart, {
       method,
       tendered,
       note,
-      subtotal,
+      grossAmount,       // Original Amount before discount
+      itemDiscountsTotal,// Sum of item discounts
       cartDiscount: { type: cartDiscountType, value: Number(cartDiscountValue) || 0, amount: cartDiscountAmount },
-      total,
+      discount: totalDiscount, // Total Discount Amount
+      total,            // Amount after discount
     });
     setBusy(false);
 
@@ -115,9 +135,11 @@ export default function PosPage() {
             {cats.map((c) => <button key={c} className={`small${cat === c ? ' on' : ''}`} aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>)}
           </div>
           <div className="pos-grid">
+          {!isStoreRole && (
             <button className="pos-tile special" onClick={() => add({ key: 'openplay', cat: 'openplay', id: '', name: 'Open play entry', price: Number(st.openPlayFee) || 0 })}>
               <b>Open play entry</b><span>{money(st.openPlayFee)}</span>
             </button>
+          )}
             {shown.map((p) => {
               const out = p.track && (Number(p.stock) || 0) - inCart(p.id) <= 0;
               return (
@@ -176,11 +198,11 @@ export default function PosPage() {
 
           {cart.length > 0 && (
             <div style={{ marginTop: 10, paddingTop: 6, borderTop: '1px solid #ccc' }}>
-              <div className="cq-row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-                <small className="cq-mut">Subtotal</small>
-                <span>{money(subtotal)}</span>
+              <div className="cq-row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
+                <small className="cq-mut">Gross Amount</small>
+                <span>{money(grossAmount)}</span>
               </div>
-              <div className="cq-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div className="cq-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <small className="cq-mut">Cart Discount</small>
                 <div className="cq-row" style={{ gap: 4, alignItems: 'center' }}>
                   <input
@@ -197,6 +219,12 @@ export default function PosPage() {
                   <button className={`small${cartDiscountType === 'percent' ? ' on' : ''}`} onClick={() => setCartDiscountType('percent')}>%</button>
                 </div>
               </div>
+              {totalDiscount > 0 && (
+                <div className="cq-row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
+                  <small className="cq-mut" style={{ color: '#d9480f' }}>Total Discount</small>
+                  <span style={{ color: '#d9480f' }}>- {money(totalDiscount)}</span>
+                </div>
+              )}
             </div>
           )}
 
