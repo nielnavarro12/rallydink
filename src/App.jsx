@@ -23,6 +23,7 @@ import ClientOpenPlay from './client/ClientOpenPlay.jsx';
 import ClientProfile from './client/ClientProfile.jsx';
 import ControlPage from './court-queue/ControlPage.jsx';
 import TvPage from './court-queue/TvPage.jsx';
+import MembershipAdmin from './pages/MembershipAdmin.jsx';
 import { HubProvider } from './hub/HubProvider.jsx';
 import Home from './hub/Home.jsx';
 import { HubDetail, HubsPage, PlatformLayout, SuperAdminsPage } from './platform/Platform.jsx';
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="ads" element={<RequirePerm perm="tv"><AdsPage /></RequirePerm>} />
           <Route path="users" element={<RequirePerm perm="staff"><UsersPage /></RequirePerm>} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="membership" element={<RequirePerm perm="membership"><MembershipAdmin /></RequirePerm>} />
         </Route>
 
 {/* client page: anyone can view, actions require login */}

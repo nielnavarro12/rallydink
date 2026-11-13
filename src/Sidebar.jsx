@@ -38,6 +38,7 @@ const links = [
   { to: "/stats", label: "Stats", icon: BarChart3, perm: "queue" },
   { to: "/ads", label: "TV & ads", icon: Tv, perm: "tv" },
   { to: "/account", label: "Settings", icon: Settings , perm: "settings" },
+  { to: "/membership", label: "Membership", icon: Settings , perm: "membership" },
 ];
 
 const Sidebar = () => {

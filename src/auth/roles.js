@@ -4,7 +4,7 @@ export const ROLES = {
   owner: {
     label: 'Owner',
     desc: 'Everything, including staff accounts and rates',
-    perms: ['queue', 'bookings', 'sessions', 'players', 'pos', 'inventory', 'income', 'refund', 'tv', 'settings', 'staff'],
+    perms: ['queue', 'bookings', 'sessions', 'players', 'pos', 'inventory', 'income', 'refund', 'tv', 'settings', 'staff','membership'],
   },
   manager: {
     label: 'Manager',

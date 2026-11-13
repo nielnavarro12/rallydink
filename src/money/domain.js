@@ -143,13 +143,39 @@ export async function recordPayment(user, { cat, name, discount = 0, amount, met
 }
 
 /* Void a sale (refund). Product lines return to stock. */
+// export async function voidSale(user, sale, reason = '') {
+//   try {
+//     await data.transaction(async (tx) => {
+//       const cur = await tx.get('sales', sale.id);
+//       if (!cur || cur.void) throw new Error('gone');
+//       const back = {};
+//       cur.lines.forEach((l) => { if (l.cat === 'product' && l.id) back[l.id] = (back[l.id] || 0) + l.qty; });
+//       const prods = {};
+//       for (const id of Object.keys(back)) prods[id] = await tx.get('products', id);
+//       Object.keys(back).forEach((id) => {
+//         const p = prods[id];
+//         if (!p || !p.track) return;
+//         const after = (Number(p.stock) || 0) + back[id];
+//         tx.set('products', id, { ...p, stock: after, updatedAt: Date.now() });
+//         tx.set('stockLog', newId(), { productId: id, name: p.name, delta: back[id], after, reason: 'void', ref: sale.id, ts: Date.now(), ...who(user) });
+//       });
+//       tx.set('sales', sale.id, { ...cur, void: true, voidedAt: Date.now(), voidReason: reason });
+//     });
+//     return { ok: true };
+//   } catch {
+//     return { ok: false, error: 'Could not void the sale.' };
+//   }
+// }
+/* Void a sale (refund). Product lines return to stock; memberships are suspended. */
 export async function voidSale(user, sale, reason = '') {
   try {
     await data.transaction(async (tx) => {
       const cur = await tx.get('sales', sale.id);
       if (!cur || cur.void) throw new Error('gone');
       const back = {};
-      cur.lines.forEach((l) => { if (l.cat === 'product' && l.id) back[l.id] = (back[l.id] || 0) + l.qty; });
+      cur.lines.forEach((l) => {
+        if (l.cat === 'product' && l.id) back[l.id] = (back[l.id] || 0) + l.qty;
+      });
       const prods = {};
       for (const id of Object.keys(back)) prods[id] = await tx.get('products', id);
       Object.keys(back).forEach((id) => {
@@ -157,8 +183,33 @@ export async function voidSale(user, sale, reason = '') {
         if (!p || !p.track) return;
         const after = (Number(p.stock) || 0) + back[id];
         tx.set('products', id, { ...p, stock: after, updatedAt: Date.now() });
-        tx.set('stockLog', newId(), { productId: id, name: p.name, delta: back[id], after, reason: 'void', ref: sale.id, ts: Date.now(), ...who(user) });
+        tx.set('stockLog', newId(), {
+          productId: id,
+          name: p.name,
+          delta: back[id],
+          after,
+          reason: 'void',
+          ref: sale.id,
+          ts: Date.now(),
+          ...who(user),
+        });
       });
+
+      // Suspend any membership that was activated by this voided sale
+      for (const l of cur.lines) {
+        if (l.cat === 'membership' && l.id) {
+          const mem = await tx.get('memberships', l.id);
+          if (mem) {
+            tx.set('memberships', l.id, {
+              ...mem,
+              status: 'suspended',
+              voidedAt: Date.now(),
+              voidReason: reason,
+            });
+          }
+        }
+      }
+
       tx.set('sales', sale.id, { ...cur, void: true, voidedAt: Date.now(), voidReason: reason });
     });
     return { ok: true };
